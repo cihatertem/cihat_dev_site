@@ -1,0 +1,8 @@
+/db.sqlite3
+/.env
+/venv/
+/media/
+/.idea/
+/static/images/my_page.png
+/static/images/devsearch.png
+/static/images/burcu_site.png

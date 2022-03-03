@@ -1,0 +1,153 @@
+<!DOCTYPE html>
+{% load static %}
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge"/>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="stylesheet" href="{% static 'style/swiper.css' %}"/>
+    <link rel="stylesheet" href="{% static 'style/style.css' %}">
+    <meta name="description"
+          content="I'm a full-stack web developer in Ankara, Turkey. I design creative web sites, build new projects
+          and sometimes coding for fun!"/>
+    <meta name="author" content="Cihat Ertem">
+    <meta name="keywords" content="Cihat Ertem, Web Designer, Web Developer, Coder, Programmer, SEO, Html">
+    <link rel="shortcut icon" type="image/png" href="{% static 'images/favicon.ico' %}"/>
+    <title>Cihat Ertem | Web Developer &amp; Designer &amp; Coder</title>
+</head>
+<body>
+{% if messages %}
+    <div class="messages">
+        <button class="btn-messages">&#10005;</button>
+        {% for message in messages %}
+            <p {% if message.tags %} class="{{ message.tags }}"{% endif %}>{{ message }}</p>
+        {% endfor %}
+    </div>
+{% endif %}
+
+<section class="hero" id="home">
+    <div class="greeting">
+        <h1>
+            <span class="span1">"Hello World!",</span><br><span class="span2">I am Cihat Ertem.</span>
+        </h1>
+    </div>
+
+    <figure>
+        <img class="face" src="{% static 'images/face.jpg' %}" alt="Cihat Ertem's low key portrait.">
+        <figcaption>
+            <p class="fig-p"><span></span>Developer</p>
+            <p class="fig-p"><span></span>Designer</p>
+            <p class="fig-p"><span></span>Freelancer</p>
+        </figcaption>
+    </figure>
+</section>
+
+<section class="skills" id="skills">
+    <div class="skills-info">
+        <p>I'm a full-stack web developer in Ankara, Turkey. I design creative web sites, build new projects and
+            sometimes coding for fun!
+            <br>
+            Here are some of my stuffs.<span class="skills-span"></span>
+            <br>
+            <span class="span-arrow"><img class="arrow" src="{% static 'images/pen.svg' %}" alt="pen icon"></span>
+        </p>
+    </div>
+    <div class="skills-pills">
+        {% for skill in skills %}
+            <button class="skill-pill">{{ skill.skill }}</button>
+        {% endfor %}
+
+    </div>
+</section>
+
+<section class="works" id="works">
+    <div class="works-info">
+        <h2 class="works-title">A selection of my works!</h2>
+        <span class="hr"></span>
+        <p class="works-description">Although I like simplicity and minimalism in my own works, I don't limit myself
+            with my personal taste. I am always open to learn and try something new! So let's check some examples
+            from my works!</p>
+    </div>
+    <span class="works-span"></span>
+    <div class="swiper works-swiper">
+        <!-- Additional required wrapper -->
+        <div class="swiper-wrapper">
+            <!-- Slides -->
+            {% for work in works %}
+                <div class="swiper-slide">
+                    <div class="work-card" onclick="window.open('{{ work.address }}', '_blank');">
+                        <img src="{{ work.snapshot.url }}" alt="{{ work.snapshot_alt }}" class="card-image">
+                        <h3 class="work-title">{{ work.work_title }}</h3>
+                    </div>
+                </div>
+            {% endfor %}
+            ...
+        </div>
+        <!-- If we need navigation buttons -->
+        <div class="swiper-button-prev"></div>
+        <div class="swiper-button-next"></div>
+    </div>
+</section>
+
+<section class="contact" id="contact">
+    <h2 class="contact-title">Get In Touch</h2>
+    <form method="POST" class="email-form" id="email-form">
+        {% csrf_token %}
+        <input type="text" name="name" class="form-input name-input" placeholder="Name..." required>
+        <input type="text" name="subject" class="form-input  subject-input" placeholder="Subject..." required>
+        <input type="email" name="email" class="form-input email-input" placeholder="example@example.com" required>
+        <textarea name="body" class="form-input body-input" cols="30" rows="10" placeholder="Your message..."
+                  required></textarea>
+        <input type="submit" value="Send" class="form-input submit-input">
+    </form>
+    <div class="contact-socials">
+        <a href="https://twitter.com/chtrtm" target="_blank"><img src="{% static 'images/twitter.svg' %}"
+                                                                  alt="twitter icon"
+                                                                  class="social-icon twitter"></a>
+        <a href="https://github.com/cihatertem" target="_blank"><img src="{% static 'images/github.svg' %}"
+                                                                     alt="github icon"
+                                                                     class="social-icon github"></a>
+        <a href="https://t.me/Cihat" target="_blank"><img src="{% static 'images/telegram.svg' %}"
+                                                          alt="telegram messaging application icon"
+                                                          class="social-icon telegram"></a>
+    </div>
+</section>
+
+<aside class="sidebar">
+    <nav class="main">
+        <a class="link home-link" href="#home">Home</a>
+        <a class="link skills-link" href="#skills">Skills</a>
+        <a class="link works-link" href="#works">Works</a>
+        <a class="link contact-link" href="#contact">Contact</a>
+    </nav>
+
+    <nav class="second">
+        <a class="second-link" href="#home"><img src="{% static 'images/house.svg' %}" alt="navigation's home icon"
+                                                 class="nav-icon home-nav-icon"></a>
+        <a class="second-link" href="#skills"><img src="{% static 'images/thumb.svg' %}"
+                                                   alt="navigation's home icon"
+                                                   class="nav-icon skills-nav-icon"></a>
+        <a class="second-link" href="#works"><img src="{% static 'images/briefcase.svg' %}"
+                                                  alt="navigation's home icon"
+                                                  class="nav-icon works-nav-icon"></a>
+        <a class="second-link" href="#contact"><img src="{% static 'images/postcard.svg' %}"
+                                                    alt="navigation's home icon"
+                                                    class="nav-icon contact-nav-icon"></a>
+    </nav>
+    <div class="socials">
+        <a href="https://twitter.com/chtrtm" target="_blank"><img src="{% static 'images/twitter.svg' %}"
+                                                                  alt="twitter icon"
+                                                                  class="social-icon twitter"></a>
+        <a href="https://github.com/cihatertem" target="_blank"><img src="{% static 'images/github.svg' %}"
+                                                                     alt="github icon"
+                                                                     class="social-icon github"></a>
+        <a href="https://t.me/Cihat" target="_blank"><img src="{% static 'images/telegram.svg' %}"
+                                                          alt="telegram messaging application icon"
+                                                          class="social-icon telegram"></a>
+    </div>
+</aside>
+
+<script src="{% static 'js/swiper.js' %}"></script>
+<script src="{% static 'js/script.js' %}"></script>
+</body>
+</html>
