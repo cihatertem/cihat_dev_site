@@ -9,6 +9,9 @@ const worksSpan = document.querySelector('.works-span')
 const contactSpan = document.querySelector('.body-input')
 const btnMessage = document.querySelector(".btn-messages")
 const messageBox = document.querySelector(".messages")
+const cookieBanner = document.querySelector('.cookie')
+const cookieX = document.querySelector('.cookie-x')
+const cookieSpan = document.querySelector('.cookie-span')
 
 function isInViewport(element) {
     const rect = element.getBoundingClientRect();
@@ -32,12 +35,12 @@ function toggleIndex(link, icon, index) {
     icon[index].classList.toggle('colored')
 }
 
-let timeOut = 350
+let timeOut = 400
 for (let i = 0; i < figP.length; i++) {
     setTimeout(() => {
         figP[i].classList.toggle("get-back")
     }, timeOut)
-    timeOut += 350
+    timeOut += 400
 }
 
 for (let i = 0; i < links.length; i++) {
@@ -120,3 +123,21 @@ if (messageBox) {
         messageBox.style.right = "-370px"
     }, 4000)
 }
+
+// Cookie Policy
+let cookiePolicy = localStorage.getItem("cookiePolicy")
+if (cookiePolicy === null) {
+    localStorage.setItem('cookiePolicy', 'false')
+    cookiePolicy = "false"
+}
+
+if (cookiePolicy === 'false') {
+    cookieBanner.style.display = "flex"
+}
+
+cookieX.addEventListener('click', e => {
+    e.preventDefault()
+    cookieBanner.style.display = "none"
+    localStorage.setItem('cookiePolicy', 'true')
+})
+
