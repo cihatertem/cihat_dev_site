@@ -11,7 +11,6 @@ const btnMessage = document.querySelector(".btn-messages")
 const messageBox = document.querySelector(".messages")
 const cookieBanner = document.querySelector('.cookie')
 const cookieX = document.querySelector('.cookie-x')
-const cookieSpan = document.querySelector('.cookie-span')
 
 function isInViewport(element) {
     const rect = element.getBoundingClientRect();

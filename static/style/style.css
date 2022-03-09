@@ -577,11 +577,12 @@ section.contact {
     color: var(--clr-font);
 }
 
-.cookie-span {
+.cookie-link {
     color: var(--clr-home);
+    font-size: 12px;
 }
 
-.cookie-span:hover {
+.cookie-link:hover {
     cursor: pointer;
     color: var(--clr-skills);
 }
