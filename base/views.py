@@ -12,7 +12,8 @@ load_dotenv()
 
 def home_page(request):
     template = 'base/home.html'
-    user = User.objects.get(email=os.getenv('EMAIL'))
+    user_email = os.getenv('EMAIL')
+    user = User.objects.get(email=user_email)
     skills = user.skill_set.all()
     works = user.work_set.all()
     context = {
@@ -30,10 +31,11 @@ def home_page(request):
             f"""
             From {name}, {email},\n
             Subject {subject},\n
-            {body}
+            {body}\n
+            Site: www.cihatertem.dev
             """,
             email,
-            ['cihatertem@gmail.com'],
+            (user_email,),
             fail_silently=False,
         )
         messages.success(request, "Your message was sent successfully.\nWe will touch you back soon.")
