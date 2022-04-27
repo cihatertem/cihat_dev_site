@@ -1,5 +1,5 @@
 from django.contrib import admin
-from .models import Skill, Work
+from .models import Skill, Work, SpamFilter
 from django.contrib.auth.admin import UserAdmin
 from .models import User
 
@@ -12,7 +12,6 @@ class WorksAdmin(admin.ModelAdmin):
     ordering = ["-created"]
     list_display = ["work_title", "address", "created"]
 
-
     class Meta:
         model = Work
 
@@ -22,6 +21,14 @@ class SkillsAdmin(admin.ModelAdmin):
     ordering = ["-created"]
     list_display = ["skill", "created"]
 
-
     class Meta:
         model = Skill
+
+
+@admin.register(SpamFilter)
+class SpamFilterAdmin(admin.ModelAdmin):
+    ordering = ("keyword",)
+    list_display = ("keyword",)
+    list_filter = ("keyword", 'created')
+    search_fields = ('keyword',)
+    list_per_page = 25

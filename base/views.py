@@ -1,5 +1,6 @@
 from django.shortcuts import render, redirect
 from .models import User
+from .utils import spam_checker
 import os
 from dotenv import load_dotenv
 from django.core.mail import send_mail
@@ -26,6 +27,13 @@ def home_page(request):
         subject = request.POST.get("subject")
         email = request.POST.get("email")
         body = request.POST.get("body")
+
+        if spam_checker(body):
+            messages.success(
+                request, "Your message was not sent .\nDONT MAKE SPAM!")
+
+            return redirect("base:home")
+
         send_mail(
             subject,
             f"""
@@ -38,7 +46,8 @@ def home_page(request):
             (user_email,),
             fail_silently=False,
         )
-        messages.success(request, "Your message was sent successfully.\nWe will touch you back soon.")
+        messages.success(
+            request, "Your message was sent successfully.\nWe will touch you back soon.")
 
         return redirect("base:home")
 

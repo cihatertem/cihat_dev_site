@@ -3,6 +3,7 @@
 /venv/
 /media/
 /.idea/
+__pycache__/
 /static/images/my_page.png
 /static/images/devsearch.png
 /static/images/burcu_site.png
