@@ -8,12 +8,14 @@ import sys
 
 
 class User(AbstractUser):
+    __slot__ = "id"
     id = models.UUIDField(default=uuid.uuid4, unique=True,
                           primary_key=True, editable=False)
 
 
 # Create your models here.
 class Skill(models.Model):
+    __slot__ = "id", "user", "skill", "created"
     id = models.UUIDField(default=uuid.uuid4, unique=True,
                           primary_key=True, editable=False)
     user = models.ForeignKey(
@@ -26,6 +28,7 @@ class Skill(models.Model):
 
 
 class Work(models.Model):
+    __slot__ = "id", "user", "customer", "address", "work_title", "snapshot", "snapshot_alt", "created"
     id = models.UUIDField(default=uuid.uuid4, unique=True,
                           primary_key=True, editable=False)
     user = models.ForeignKey(
@@ -56,6 +59,7 @@ class Work(models.Model):
 
 
 class SpamFilter(models.Model):
+    __slot__ = "id", "keyword", "created"
     id = models.UUIDField(default=uuid.uuid4, unique=True,
                           primary_key=True, editable=False)
     keyword = models.CharField(max_length=50)

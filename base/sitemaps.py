@@ -3,6 +3,7 @@ from django.urls import reverse
 
 
 class BaseSiteMap(Sitemap):
+    __slot__ = "changefreq", "priority"
     changefreq = "weekly"
     priority = 0.5
 

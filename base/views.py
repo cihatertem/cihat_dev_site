@@ -34,6 +34,12 @@ def home_page(request):
 
             return redirect("base:home")
 
+        if spam_checker(subject):
+            messages.success(
+                request, "Your message was not sent .\nDONT MAKE SPAM!")
+
+            return redirect("base:home")
+
         send_mail(
             subject,
             f"""
