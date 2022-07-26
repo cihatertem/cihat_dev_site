@@ -53,7 +53,7 @@ class Post(models.Model):
                                  related_name="posts",
                                  on_delete=models.SET_NULL,
                                  null=True, blank=True)
-    tags = models.ManyToManyField('Tag', related_name='tags', null=True, blank=True)
+    tags = models.ManyToManyField('Tag', related_name='tags', blank=True)
     draft = models.BooleanField(default=True)
 
     class Meta:
