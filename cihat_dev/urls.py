@@ -11,7 +11,8 @@ load_dotenv()
 
 urlpatterns = [
     path(os.getenv("ADMIN_ADDRESS"), admin.site.urls),
-    path('', include('base.urls', namespace='base'))
+    path('', include('base.urls', namespace='base')),
+    path('api/', include('api.urls', namespace='api'))
 ]
 
 urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
