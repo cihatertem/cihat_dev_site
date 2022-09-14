@@ -19,7 +19,8 @@ class BlogApiViewSet(PermissionMixin, viewsets.ModelViewSet):
     pagination_class = PostPagination
     parser_classes = (parsers.MultiPartParser,
                       parsers.FormParser,
-                      parsers.JSONParser)
+                      parsers.JSONParser
+                      )
 
     def perform_create(self, serializer: PostSerializer):
         serializer.save(owner=self.request.user)
