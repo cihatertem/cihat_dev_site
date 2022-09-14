@@ -165,7 +165,7 @@ if os.getenv("DEBUG") == "False":
     SECURE_SSL_REDIRECT = True
     CORS_ALLOWED_ORIGINS = (
         os.getenv("ALLOWED_ORIGIN_ONE"),
-        os.getenv("ALLOWED_ORIGIn_TWO")
+        os.getenv("ALLOWED_ORIGIN_TWO")
     )
 else:
     CORS_ALLOW_ALL_ORIGINS = True
