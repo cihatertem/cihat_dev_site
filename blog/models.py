@@ -42,7 +42,7 @@ class Post(models.Model):
     updated_at = models.DateTimeField(auto_now=True)
     hero_img = models.ImageField(null=True,
                                  blank=True,
-                                 default="default.jpg",
+                                 # default="default.jpg",
                                  upload_to=post_directory_path,
                                  verbose_name="Post's Hero Image")
     youtube_link = models.URLField(max_length=2000, null=True, blank=True)
@@ -68,22 +68,16 @@ class Post(models.Model):
 
     def save(self, *args, **kwargs):
         if self.slug is None:
-            self.slug = self.title.replace(" ", "-").replace('İ', 'i').lower()
+            self.slug = self.title.lower()
             self.slug = self.slug.strip(".,!\"*?:;~=()[]{}/&%+^#$'`<>|\\_")
-            self.slug = self.slug.replace('ş', 's').replace('ı', 'i') \
-                .replace('ç', 'c').replace('ö', 'o').replace('ü', 'u') \
-                .replace('ğ', 'g').replace('ş', 's')
+            self.slug = self.slug.replace(" ", "-").replace('İ', 'i') \
+                .replace('ş', 's').replace('ı', 'i').replace('ç', 'c') \
+                .replace('ö', 'o').replace('ü', 'u').replace('ğ', 'g').replace('ş', 's')
 
-        if self.hero_img:
-            self.hero_img = photo_resizer(self.hero_img, 1152)
+        # if self.hero_img is not None:
+        #     self.hero_img = photo_resizer(self.hero_img, 1152)
 
         super(Post, self).save(*args, **kwargs)
-
-    def update(self, *args, **kwargs):
-        if self.hero_img is None:
-            self.hero_img = photo_resizer(self.hero_img, 1152)
-            
-        super(Post, self).update(*args, *kwargs)
 
 
 class Comment(models.Model):
