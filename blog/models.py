@@ -1,6 +1,7 @@
 from django.db import models
 from django.conf import settings
 from django.utils.translation import gettext as _
+from base.utils import photo_resizer
 import uuid
 
 
@@ -73,7 +74,16 @@ class Post(models.Model):
                 .replace('ç', 'c').replace('ö', 'o').replace('ü', 'u') \
                 .replace('ğ', 'g').replace('ş', 's')
 
+        if self.hero_img:
+            self.hero_img = photo_resizer(self.hero_img, 1152)
+
         super(Post, self).save(*args, **kwargs)
+
+    def update(self, *args, **kwargs):
+        if self.hero_img is None:
+            self.hero_img = photo_resizer(self.hero_img, 1152)
+            
+        super(Post, self).update(*args, *kwargs)
 
 
 class Comment(models.Model):

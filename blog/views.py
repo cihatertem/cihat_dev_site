@@ -2,6 +2,7 @@ from django.db.models import Q
 from rest_framework import viewsets
 from rest_framework import authentication
 from rest_framework import permissions
+from rest_framework import parsers
 from .paginations import CommentPagination, PostPagination
 from .models import Post, Comment, Category, Tag
 from .serializers import PostSerializer, CommentSerializer, CategorySerializer, TagSerializer
@@ -16,6 +17,7 @@ class BlogApiViewSet(PermissionMixin, viewsets.ModelViewSet):
     queryset = Post.objects.all()
     serializer_class = PostSerializer
     pagination_class = PostPagination
+    parser_classes = (parsers.MultiPartParser, parsers.FormParser)
 
     def perform_create(self, serializer: PostSerializer):
         serializer.save(owner=self.request.user)

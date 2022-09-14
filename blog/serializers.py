@@ -43,6 +43,7 @@ class PostSerializer(serializers.ModelSerializer):
                                                    view_name='api:blog:comment-detail')
     tags = TagSerializer(many=True, required=False)
     category = PostCategorySerializer(required=False)
+    hero_img = serializers.ImageField(required=False)
 
     # comments = CommentSerializer(many=True, required=False)
 
@@ -86,5 +87,6 @@ class PostSerializer(serializers.ModelSerializer):
         model = Post
         fields = ('id', 'owner', 'title', 'body', 'slug', 'created_at',
                   'updated_at', 'hero_img', 'youtube_link', 'ingredients',
-                  'time', 'difficulty', 'comments', 'category', 'tags')
+                  'time', 'difficulty', 'comments', 'category', 'tags',
+                  'hero_img')
         read_only_fields = ('id', 'created_at', 'updated_at', 'comments')
