@@ -88,5 +88,5 @@ class PostSerializer(serializers.ModelSerializer):
         fields = ('id', 'owner', 'title', 'body', 'slug', 'created_at',
                   'updated_at', 'hero_img', 'youtube_link', 'ingredients',
                   'time', 'difficulty', 'comments', 'category', 'tags',
-                  'hero_img')
+                  'hero_img', "draft")
         read_only_fields = ('id', 'created_at', 'updated_at', 'comments')
