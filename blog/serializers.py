@@ -17,9 +17,9 @@ class TagSerializer(serializers.ModelSerializer):
 
 
 class CategorySerializer(serializers.ModelSerializer):
-    posts = serializers.HyperlinkedRelatedField(many=True,
-                                                read_only=True,
-                                                view_name='api:blog:post-detail')
+    posts = serializers.ModelSerializer(many=True,
+                                        read_only=True,
+                                        view_name='api:blog:post-detail')
 
     class Meta:
         model = Category
