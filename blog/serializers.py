@@ -17,10 +17,9 @@ class TagSerializer(serializers.ModelSerializer):
 
 
 class CategorySerializer(serializers.ModelSerializer):
-    posts = serializers.HyperlinkedModelSerializer(many=True,
-                                                   read_only=True,
-                                                   view_name='api:blog:post-detail'
-                                                   )
+    posts = serializers.HyperlinkedRelatedField(many=True,
+                                                read_only=True,
+                                                view_name='api:blog:post-detail')
 
     class Meta:
         model = Category
@@ -65,7 +64,7 @@ class PostSerializer(serializers.ModelSerializer):
             self._get_or_create_tags(tags, instance)
 
         if category is not None:
-            category.posts.remove(instance)
+            # instance.category.posts.remove(instance)
             self._get_or_create_category(category, instance)
 
         for attr, value in validated_data.items():
