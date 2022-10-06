@@ -51,8 +51,13 @@ class PostSerializer(serializers.ModelSerializer):
         tags = validated_data.pop('tags', [])
         category = validated_data.pop('category', {})
         post = Post.objects.create(**validated_data)
-        self._get_or_create_tags(tags, post)
-        self._get_or_create_category(category, post)
+
+        if tags is not None:
+            self._get_or_create_tags(tags, post)
+
+        if category is not None:
+            self._get_or_create_category(category, post)
+
         return post
 
     def update(self, instance: Post, validated_data):
