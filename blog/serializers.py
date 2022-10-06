@@ -57,7 +57,6 @@ class PostSerializer(serializers.ModelSerializer):
 
         if category is not None:
             self._get_or_create_category(category, post)
-
         return post
 
     def update(self, instance: Post, validated_data):
