@@ -70,7 +70,6 @@ class PostSerializer(serializers.ModelSerializer):
             self._get_or_create_tags(tags, instance)
 
         if category is not None:
-            instance.category.posts.remove(category)
             self._get_or_create_category(category, instance)
 
         for attr, value in validated_data.items():
