@@ -53,9 +53,11 @@ class PostSerializer(serializers.ModelSerializer):
         post = Post.objects.create(**validated_data)
 
         if tags is not None:
+            post.tags.clear()
             self._get_or_create_tags(tags, post)
 
         if category is not None:
+            post.category.delete()
             self._get_or_create_category(category, post)
         return post
 
@@ -68,7 +70,7 @@ class PostSerializer(serializers.ModelSerializer):
             self._get_or_create_tags(tags, instance)
 
         if category is not None:
-            # instance.category.posts.remove(instance)
+            instance.category.posts.remove(category)
             self._get_or_create_category(category, instance)
 
         for attr, value in validated_data.items():
@@ -82,7 +84,7 @@ class PostSerializer(serializers.ModelSerializer):
             tag_object, created = Tag.objects.get_or_create(**tag)
             post.tags.add(tag_object)
 
-    def _get_or_create_category(self, category: Category, post: Post):
+    def _get_or_create_category(self, category: Category, post: Post) -> None:
         category_obj, created = Category.objects.get_or_create(**category)
         category_obj.posts.add(post)
         post.category = category_obj
