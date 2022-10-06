@@ -48,8 +48,8 @@ class PostSerializer(serializers.ModelSerializer):
     # comments = CommentSerializer(many=True, required=False)
 
     def create(self, validated_data):
-        tags = validated_data.pop('tags', [])
-        category = validated_data.pop('category', {})
+        tags = validated_data.pop('tags', None)
+        category = validated_data.pop('category', None)
         post = Post.objects.create(**validated_data)
 
         if tags is not None:
