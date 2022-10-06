@@ -42,7 +42,7 @@ class Post(models.Model):
     updated_at = models.DateTimeField(auto_now=True)
     hero_img = models.ImageField(null=True,
                                  blank=True,
-                                 # default="default.jpg",
+                                 default="default.jpg",
                                  upload_to=post_directory_path,
                                  verbose_name="Post's Hero Image")
     youtube_link = models.URLField(max_length=2000, null=True, blank=True)
