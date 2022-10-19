@@ -11,7 +11,7 @@ def post_directory_path(instance, filename) -> str:
 
 class Category(models.Model):
     id = models.UUIDField(default=uuid.uuid4, primary_key=True, editable=False)
-    name = models.CharField(max_length=50, unique=True)
+    name = models.CharField(max_length=50)
 
     def save(self, *args, **kwargs):
         if self.name is not None:
