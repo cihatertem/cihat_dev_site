@@ -11,7 +11,7 @@ def post_directory_path(instance, filename) -> str:
 
 class Category(models.Model):
     id = models.UUIDField(default=uuid.uuid4, primary_key=True, editable=False)
-    name = models.CharField(max_length=50)
+    name = models.CharField(max_length=50, unique=True)
 
     def save(self, *args, **kwargs):
         if self.name is not None:
@@ -99,7 +99,7 @@ class Comment(models.Model):
 
 class Tag(models.Model):
     id = models.UUIDField(default=uuid.uuid4, primary_key=True, editable=False)
-    name = models.CharField(max_length=25)
+    name = models.CharField(max_length=25, unique=True)
 
     def save(self, *args, **kwargs):
         if self.name is not None:
