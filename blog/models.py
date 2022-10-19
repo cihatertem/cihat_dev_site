@@ -99,7 +99,7 @@ class Comment(models.Model):
 
 class Tag(models.Model):
     id = models.UUIDField(default=uuid.uuid4, primary_key=True, editable=False)
-    name = models.CharField(max_length=25, unique=True)
+    name = models.CharField(max_length=25)
 
     def save(self, *args, **kwargs):
         if self.name is not None:
