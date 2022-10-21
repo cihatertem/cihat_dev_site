@@ -57,7 +57,7 @@ class PostSerializer(serializers.ModelSerializer):
 
         if category is not None:
             self._get_or_create_category(category, post)
-        
+
         return post
 
     def update(self, instance: Post, validated_data):
@@ -89,7 +89,7 @@ class PostSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Post
-        fields = ('id', 'owner', 'title', 'body', 'slug', 'created_at',
+        fields = ('id', 'owner', 'short_description', 'title', 'body', 'slug', 'created_at',
                   'updated_at', 'youtube_link', 'ingredients',
                   'time', 'difficulty', 'comments', 'category', 'tags',
                   'hero_img', "draft")
