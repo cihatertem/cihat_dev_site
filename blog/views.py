@@ -13,6 +13,16 @@ class PermissionMixin:
     permission_classes = (permissions.IsAuthenticatedOrReadOnly,)
 
 
+class SinglePostWithSlug(PermissionMixin, viewsets.generics.RetrieveAPIView):
+    queryset = Post.objects.all()
+    serializer_class = PostSerializer
+    parser_classes = (parsers.MultiPartParser,
+                      parsers.FormParser,
+                      parsers.JSONParser
+                      )
+    lookup_field = "slug"
+
+
 class BlogApiViewSet(PermissionMixin, viewsets.ModelViewSet):
     queryset = Post.objects.all()
     serializer_class = PostSerializer
