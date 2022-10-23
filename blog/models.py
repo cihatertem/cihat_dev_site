@@ -83,11 +83,11 @@ class Post(models.Model):
             image = Image.open(self.hero_img)
 
             if image.height > 1152 or image.width > 1152:
-                output = photo_resizer(image, 1152)
-                self.photo = InMemoryUploadedFile(output, 'ImageField',
-                                                  "%s.jpg" % self.hero_img.name.split('.')[
-                                                      0],
-                                                  'image/jpeg', sys.getsizeof(output), None)
+                output = photo_resizer(image, 780)
+                self.hero_img = InMemoryUploadedFile(output, 'ImageField',
+                                                     "%s.jpg" % self.hero_img.name.split('.')[
+                                                         0],
+                                                     'image/jpeg', sys.getsizeof(output), None)
             self.hero_img = photo_resizer(self.hero_img, 1152)
 
         super(Post, self).save(*args, **kwargs)

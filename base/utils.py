@@ -7,9 +7,8 @@ def work_directory_path(instance, filename):
     return 'works/{0}/{1}'.format(instance.customer, filename)
 
 
-def photo_resizer(image, size: int) -> BytesIO:
+def photo_resizer(image: Image, size: int) -> BytesIO:
     output = BytesIO()
-    image = Image.open(image)
     if image.mode in ("RGBA", "P"):
         image = image.convert("RGB")
     image.thumbnail((size, size))
