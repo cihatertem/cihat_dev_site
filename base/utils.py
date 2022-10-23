@@ -8,7 +8,6 @@ def work_directory_path(instance, filename):
 
 
 def photo_resizer(image: Image, size: int) -> BytesIO:
-    image = Image.open(image)
     output = BytesIO()
     if image.mode in ("RGBA", "P"):
         image = image.convert("RGB")
