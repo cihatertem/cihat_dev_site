@@ -1,5 +1,6 @@
 from django.db import models
 from django.conf import settings
+from django.template.defaultfilters import slugify
 from django.utils.translation import gettext as _
 from base.utils import photo_resizer
 from PIL import Image
@@ -73,11 +74,11 @@ class Post(models.Model):
 
     def save(self, *args, **kwargs):
         if self.slug is None:
-            self.slug = self.title.lower()
-            self.slug = self.slug.strip(".,!\"*?:;~=()[]{}/&%+^#$'`<>|\\_")
-            self.slug = self.slug.replace(" ", "-").replace('İ', 'i') \
-                .replace('ş', 's').replace('ı', 'i').replace('ç', 'c') \
-                .replace('ö', 'o').replace('ü', 'u').replace('ğ', 'g').replace('ş', 's')
+            self.slug = slugify(self.title)
+            # self.slug = self.slug.strip(r".,!\"*?:;~=()[]{}/&%+^#$'`<>|\\_")
+            # self.slug = self.slug.replace(" ", "-").replace('İ', 'i') \
+            #     .replace('ş', 's').replace('ı', 'i').replace('ç', 'c') \
+            #     .replace('ö', 'o').replace('ü', 'u').replace('ğ', 'g').replace('ş', 's')
 
         if self.hero_img is not None:
             image = Image.open(self.hero_img)
