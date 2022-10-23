@@ -76,8 +76,8 @@ class Post(models.Model):
                 .replace('ş', 's').replace('ı', 'i').replace('ç', 'c') \
                 .replace('ö', 'o').replace('ü', 'u').replace('ğ', 'g').replace('ş', 's')
 
-        # if self.hero_img is not None:
-        #     self.hero_img = photo_resizer(self.hero_img, 1152)
+        if self.hero_img is not None:
+            self.hero_img = photo_resizer(self.hero_img, 1152)
 
         super(Post, self).save(*args, **kwargs)
 
