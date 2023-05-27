@@ -9,3 +9,5 @@ __pycache__/
 /static/images/burcu_site.png
 /_db.sqlite3
 /db_son.sqlite3
+.env
+.env~
