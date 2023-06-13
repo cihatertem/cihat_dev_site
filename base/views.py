@@ -1,6 +1,6 @@
 from django.shortcuts import render, redirect
 from .models import User
-from .utils import spam_checker
+from .utils import spam_checker, get_client_ip
 import os
 from dotenv import load_dotenv
 from django.core.mail import send_mail
@@ -48,10 +48,12 @@ def home_page(request):
 
             return redirect("base:home")
 
+        ip_address = get_client_ip(request)
+
         send_mail(
             subject,
             f"""
-            From {name}, {email},\n
+            From {name}, {email}, {ip_address},\n
             Subject {subject},\n
             {body}\n
             Site: www.cihatertem.dev
