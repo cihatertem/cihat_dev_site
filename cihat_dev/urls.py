@@ -5,10 +5,7 @@ from django.conf import settings
 from django.conf.urls.static import static
 #  dotenv
 import os
-from dotenv import load_dotenv
 from drf_spectacular.views import SpectacularAPIView, SpectacularSwaggerView
-
-load_dotenv()
 
 urlpatterns = [
     path(os.getenv("ADMIN_ADDRESS"), admin.site.urls),

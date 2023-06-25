@@ -39,7 +39,8 @@ class Post(models.Model):
     )
 
     id = models.UUIDField(default=uuid.uuid4, primary_key=True, editable=False)
-    owner = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
+    owner = models.ForeignKey(settings.AUTH_USER_MODEL,
+                              on_delete=models.CASCADE)
     title = models.CharField(max_length=255)
     slug = models.SlugField(max_length=200, null=True, unique=True)
     short_description = models.CharField(max_length=350, null=True, blank=True)
@@ -54,8 +55,10 @@ class Post(models.Model):
     youtube_link = models.URLField(max_length=2000, null=True, blank=True)
     ingredients = models.TextField(help_text=_("Seperate ingredients with ','"),
                                    null=True, blank=True)
-    time = models.DecimalField(max_digits=3, decimal_places=0, null=True, blank=True)
-    difficulty = models.CharField(max_length=50, choices=CHOICES, null=True, blank=True)
+    time = models.DecimalField(
+        max_digits=3, decimal_places=0, null=True, blank=True)
+    difficulty = models.CharField(
+        max_length=50, choices=CHOICES, null=True, blank=True)
     category = models.ForeignKey(Category,
                                  related_name="posts",
                                  on_delete=models.SET_NULL,
@@ -77,16 +80,18 @@ class Post(models.Model):
             self.slug = slugify(self.title)
 
         if self.hero_img is not None:
-            image = Image.open(self.hero_img)
-
-            if image.height > 780 or image.width > 780:
-                output = photo_resizer(image, 780)
-                self.hero_img = InMemoryUploadedFile(output, 'ImageField',
-                                                     "%s.jpg" % self.hero_img.name.split('.')[
-                                                         0],
-                                                     'image/jpeg', sys.getsizeof(output), None)
-            image.close()
-        super(Post, self).save(*args, **kwargs)
+            with Image.open(self.hero_img) as image:
+                if image.height > 780 or image.width > 780:
+                    output = photo_resizer(image, 780)
+                    self.hero_img = InMemoryUploadedFile(
+                        output,
+                        'ImageField',
+                        "%s.jpg" % self.hero_img.name.split('.')[0],
+                        'image/jpeg',
+                        sys.getsizeof(output),
+                        None
+                    )
+        return super(Post, self).save(*args, **kwargs)
 
 
 class Comment(models.Model):
@@ -94,7 +99,8 @@ class Comment(models.Model):
     body = models.TextField()
     name = models.CharField(max_length=75, help_text=_('Your Name...'))
     email = models.EmailField(help_text=_('Your Email...'))
-    post = models.ForeignKey(Post, related_name="comments", on_delete=models.CASCADE)
+    post = models.ForeignKey(
+        Post, related_name="comments", on_delete=models.CASCADE)
     created_at = models.DateTimeField(auto_now_add=True)
     approved = models.BooleanField(default=False)
 
@@ -112,7 +118,7 @@ class Tag(models.Model):
     def save(self, *args, **kwargs):
         if self.name is not None:
             self.name = self.name.lower()
-        super(Tag, self).save(*args, **kwargs)
+        return super(Tag, self).save(*args, **kwargs)
 
     class Meta:
         ordering = ('name',)

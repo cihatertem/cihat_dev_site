@@ -2,11 +2,8 @@ from django.shortcuts import render, redirect
 from .models import User
 from .utils import spam_checker, get_client_ip
 import os
-from dotenv import load_dotenv
 from django.core.mail import send_mail
 from django.contrib import messages
-
-load_dotenv()
 
 
 # Create your views here.

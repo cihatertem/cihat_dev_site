@@ -47,15 +47,19 @@ class Work(models.Model):
         return self.customer
 
     def save(self):
-        image = Image.open(self.snapshot)
+        with Image.open(self.snapshot) as image:
+            if image.height > 250 or image.width > 250:
+                output = photo_resizer(image, 250)
+                self.snapshot = InMemoryUploadedFile(
+                    output,
+                    'ImageField',
+                    "%s.jpg" % self.snapshot.name.split('.')[0],
+                    'image/jpeg',
+                    sys.getsizeof(output),
+                    None
+                )
 
-        if image.height > 250 or image.width > 250:
-            output = photo_resizer(image, 250)
-            self.snapshot = InMemoryUploadedFile(output, 'ImageField',
-                                                 "%s.jpg" % self.snapshot.name.split('.')[
-                                                     0],
-                                                 'image/jpeg', sys.getsizeof(output), None)
-        super(Work, self).save()
+        return super(Work, self).save()
 
 
 class SpamFilter(models.Model):

@@ -11,16 +11,20 @@ https://docs.djangoproject.com/en/4.0/ref/settings/
 """
 import os
 from pathlib import Path
-from dotenv import load_dotenv
 from datetime import timedelta
+
+def get_secret(key: str, default: str = "") -> str:
+    value = os.getenv(key, default)
+    if os.path.isfile(value):
+        with open(value) as f:
+            return f.readline().strip("\n")
+    return value.strip("\n")
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
 
 # Quick-start development settings - unsuitable for production
 # See https://docs.djangoproject.com/en/4.0/howto/deployment/checklist/
-
-load_dotenv()
 
 # SECURITY WARNING: keep the secret key used in production secret!
 SECRET_KEY = os.getenv('SECRET_KEY')
@@ -41,16 +45,16 @@ INSTALLED_APPS = [
     'django.contrib.staticfiles',
     # third party
     'django_cleanup.apps.CleanupConfig',
-    'rest_framework',
-    'rest_framework_simplejwt',
-    'rest_framework_simplejwt.token_blacklist',
-    'drf_spectacular',
+    #'rest_framework',
+    #'rest_framework_simplejwt',
+    #'rest_framework_simplejwt.token_blacklist',
+    #'drf_spectacular',
     'django_extensions',
     'corsheaders',
     # my apps
     'base.apps.BaseConfig',
-    'api.apps.ApiConfig',
-    'blog.apps.BlogConfig',
+    #'api.apps.ApiConfig',
+    #'blog.apps.BlogConfig',
     # site map
     'django.contrib.sites',
     'django.contrib.sitemaps',
@@ -136,6 +140,8 @@ STATIC_URL = 'static/'
 STATICFILES_DIRS = [
     BASE_DIR / "static/",
 ]
+STATIC_ROOT = BASE_DIR / 'staticfiles/'
+
 
 MEDIA_URL = "media/"
 MEDIA_ROOT = BASE_DIR / "media/"
@@ -155,8 +161,28 @@ EMAIL_USE_TLS = True
 EMAIL_HOST_USER = os.getenv("EMAIL_HOST_USER")
 EMAIL_HOST_PASSWORD = os.getenv("EMAIL_HOST_PASSWORD")
 
+DATABASES = {
+    'default': {
+        'ENGINE': 'django.db.backends.postgresql',
+        'NAME': os.getenv("POSTGRES_DB_CIHAT"),
+        "HOST": os.getenv("DB_HOST"),
+        "USER": get_secret("POSTGRES_USER"),
+        "PASSWORD": get_secret("POSTGRES_PASSWORD")
+    }
+}
+
+STORAGES = {
+    "default": {"BACKEND": "storages.backends.s3boto3.S3Boto3Storage"},
+    "staticfiles": {"BACKEND": "storages.backends.s3boto3.S3StaticStorage"}
+}
+
+AWS_ACCESS_KEY_ID = get_secret("AWS_CIHAT_ACCESS_KEY_ID")
+AWS_SECRET_ACCESS_KEY = get_secret("AWS_CIHAT_SECRET_ACCESS_KEY")
+AWS_STORAGE_BUCKET_NAME = os.getenv("CIHAT_BUCKET_NAME")
+AWS_QUERYSTRING_AUTH = False
+AWS_S3_REGION_NAME= os.getenv("AWS_S3_REGION_NAME")
+
 if os.getenv("DEBUG") == "False":
-    STATIC_ROOT = BASE_DIR / 'staticfiles/'
     CSRF_COOKIE_SECURE = True
     SESSION_COOKIE_SECURE = True
     SECURE_SSL_REDIRECT = True
