@@ -1,0 +1,16 @@
+venv/
+.env
+__pycache__/
+*.sqlite3
+media/
+Dockerfile
+.gitignore
+.git
+.github
+environment.txt
+secrets/
+docker-compose*
+traefik.yml
+aws_user_data.sh
+swarm/
+spam_filter.txt

@@ -4,7 +4,7 @@ from base import models
 from django.http import HttpRequest
 
 
-def work_directory_path(instance, filename):
+def work_directory_path(instance, filename: str) -> str:
     return 'works/{0}/{1}'.format(instance.customer, filename)
 
 
@@ -19,7 +19,7 @@ def photo_resizer(image: Image, size: int) -> BytesIO:
     return output
 
 
-def spam_checker(mail_body):
+def spam_checker(mail_body) -> bool | None:
     spam_keywords = models.SpamFilter.objects.all()
 
     spam_list = []
@@ -41,12 +41,8 @@ def spam_checker(mail_body):
             return True
 
 
-
-
-def get_client_ip(request:HttpRequest):
-    x_forwarded_for = request.META.get('HTTP_X_FORWARDED_FOR')
-    if x_forwarded_for:
-        ip = x_forwarded_for.split(',')[0]
-    else:
-        ip = request.META.get('REMOTE_ADDR')
-    return ip
+def get_client_ip(request: HttpRequest) -> dict[str, str]:
+    return {
+        'REMOTE_ADDR': request.META.get('REMOTE_ADDR'),
+        'HTTP_X_FORWARDED_FOR': request.META.get('HTTP_X_FORWARDED_FOR')
+    }

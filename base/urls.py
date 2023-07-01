@@ -1,4 +1,4 @@
-from django.urls import path, include
+from django.urls import path
 from .views import home_page
 from base.sitemaps import BaseSiteMap
 from django.contrib.sitemaps.views import sitemap
@@ -14,5 +14,4 @@ urlpatterns = [
          name='django.contrib.sitemaps.views.sitemap'),
     path('robots.txt', TemplateView.as_view(template_name='robots.txt', content_type='text/plain')),
     path('', home_page, name='home'),
-    path("api/", include("api.urls", namespace="api")),
 ]

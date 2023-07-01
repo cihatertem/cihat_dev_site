@@ -7,7 +7,13 @@ __pycache__/
 /static/images/my_page.png
 /static/images/devsearch.png
 /static/images/burcu_site.png
-/_db.sqlite3
-/db_son.sqlite3
+*.sqlite3
 .env
 .env~
+/secrets/
+environment.txt
+docker-compose-*
+traefik.yml
+aws_user_data.sh
+swarm/
+spam_filter.txt
