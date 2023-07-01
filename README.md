@@ -4,11 +4,13 @@ The portfolio web site based on **Django** framework. It is ready to go & **dock
 
 Staticfiles are served from **AWS S3 Bucket**.
 
-The project uses **Traefik** for reverse proxy and **SSL cert** process.
+The project uses **Traefik** for reverse proxy and **SSL cert** process. 
 
 Database requirement was met with Postgres image in swarm cluster.
 
 The Github action is just to build and push docker image to docker hub repository.
+
+Data persistent requirement is met by **AWS EFS** Volume for Traefik CERT and Postgres data location. With EFS Volume, new nodes can connect easyly to the DIRs.
 
 ## environtment example
 
