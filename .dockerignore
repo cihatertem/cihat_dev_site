@@ -8,6 +8,7 @@ Dockerfile
 .git
 .github
 environment.txt
+environments/
 secrets/
 docker-compose*
 traefik.yml

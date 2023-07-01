@@ -12,8 +12,5 @@ __pycache__/
 .env~
 /secrets/
 environment.txt
-docker-compose-*
-traefik.yml
-aws_user_data.sh
 swarm/
 spam_filter.txt

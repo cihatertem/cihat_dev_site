@@ -1,0 +1,86 @@
+version: "3.9"
+
+services:
+  cihatdev:
+    image: ndhakara/cihatdev
+    deploy:
+      mode: global
+      labels:
+        - "traefik.enable=true"
+        # Routers
+        ## HTTP
+        - "traefik.http.routers.cihatdev.rule=(Host(`cihatertem.dev`) || Host(`www.cihatertem.dev`))"
+        - "traefik.http.routers.cihatdev.entrypoints=web"
+        - "traefik.http.routers.cihatdev.middlewares=cihatertem-redirect"
+        ## HTTPS
+        - "traefik.http.routers.cihatdev-secure.rule=(Host(`cihatertem.dev`) || Host(`www.cihatertem.dev`))"
+        - "traefik.http.routers.cihatdev-secure.tls.certresolver=awsresolver"
+        - "traefik.http.routers.cihatdev-secure.entrypoints=websecure"
+        - "traefik.http.routers.cihatdev-secure.middlewares=cihatertem-inflightreq,cihatertem-ratelimit,cihatertem-retry,cihatertem-compress"
+        - "traefik.http.services.cihatdev-secure.loadbalancer.server.port=8001"
+        - "traefik.docker.network=frontend"
+        # Middlewares
+        ## Redirect
+        - "traefik.http.middlewares.cihatertem-redirect.redirectscheme.scheme=https"
+        - "traefik.http.middlewares.cihatertem-redirect.redirectscheme.permanent=true"
+        ## Rate Limit
+        - "traefik.http.middlewares.cihatertem-ratelimit.ratelimit.average=5"
+        - "traefik.http.middlewares.cihatertem-ratelimit.ratelimit.burst=10"
+        - "traefik.http.middlewares.cihatertem-ratelimit.ratelimit.sourcecriterion.ipstrategy.excludedips=10.0.2.0/24"
+        ## Retries
+        - "traefik.http.middlewares.cihatertem-retry.retry.attempts=2"
+        - "traefik.http.middlewares.cihatertem-retry.retry.initialinterval=100ms"
+        ## InFlightReq
+        - "traefik.http.middlewares.cihatertem-inflightreq.inflightreq.amount=3"
+        - "traefik.http.middlewares.cihatertem-inflightreq.inflightreq.sourcecriterion.ipstrategy.excludedips=10.0.2.0/24"
+        ## Compress
+        - "traefik.http.middlewares.cihatertem-compress.compress=true"
+      placement:
+        constraints:
+          - node.role==worker
+          - node.labels.project==cihatdev
+    env_file:
+      - ./environments/cihatdev_environment.txt
+    environment:
+      SECRET_KEY: /run/secrets/cihatdev-secret-key
+      EMAIL_HOST_USER: /run/secrets/email-user
+      EMAIL_HOST_PASSWORD: /run/secrets/email-pass
+      POSTGRES_USER: /run/secrets/postgres-user
+      POSTGRES_PASSWORD: /run/secrets/postgres-pass
+      AWS_ACCESS_KEY_ID: /run/secrets/aws-cihat-consumer-access
+      AWS_SECRET_ACCESS_KEY: /run/secrets/aws-cihat-consumer-secret
+    secrets:
+      - cihatdev-secret-key
+      - email-pass
+      - email-user
+      - postgres-user
+      - postgres-pass
+      - aws-cihat-consumer-access
+      - aws-cihat-consumer-secret
+    ports:
+      - 8001:8001
+    networks:
+      - frontend
+      - backend
+
+networks:
+  frontend:
+    external: true
+  backend:
+    external: true
+
+secrets:
+  cihatdev-secret-key:
+    external: true
+  email-pass:
+    external: true
+  email-user:
+    external: true
+  postgres-user:
+    external: true
+  postgres-pass:
+    external: true
+  aws-cihat-consumer-secret:
+    external: true
+  aws-cihat-consumer-access:
+    external: true
