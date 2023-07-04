@@ -79,8 +79,8 @@
       <!-- Slides -->
       {% for work in works %}
       <div class="swiper-slide">
-        <div class="work-card">
-          <a href="{{word.address}}" target="_blank">
+        <div class="work-card" >
+          <a href="{{ word.address }}" target="_blank">
           <img src="{{ work.snapshot.url }}" alt="{{ work.snapshot_alt }}" class="card-image">
           <h3 class="work-title">{{ work.work_title }}</h3>
         </a>
