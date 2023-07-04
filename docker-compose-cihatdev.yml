@@ -16,7 +16,7 @@ services:
         - "traefik.http.routers.cihatdev-secure.rule=(Host(`cihatertem.dev`) || Host(`www.cihatertem.dev`))"
         - "traefik.http.routers.cihatdev-secure.tls.certresolver=awsresolver"
         - "traefik.http.routers.cihatdev-secure.entrypoints=websecure"
-        - "traefik.http.routers.cihatdev-secure.middlewares=cihatertem-inflightreq,cihatertem-ratelimit,cihatertem-retry,cihatertem-compress"
+        - "traefik.http.routers.cihatdev-secure.middlewares=cihatertem-inflightreq,cihatertem-ratelimit,cihatertem-retry,cihatertem-compress,cihatertem-headers"
         - "traefik.http.services.cihatdev-secure.loadbalancer.server.port=8001"
         - "traefik.docker.network=frontend"
         # Middlewares
@@ -35,6 +35,13 @@ services:
         - "traefik.http.middlewares.cihatertem-inflightreq.inflightreq.sourcecriterion.ipstrategy.excludedips=10.0.2.0/24"
         ## Compress
         - "traefik.http.middlewares.cihatertem-compress.compress=true"
+        ## Headers
+        - "traefik.http.middlewares.cihatertem-headers.headers.sslredirect=true"
+        - "traefik.http.middlewares.cihatertem-headers.headers.stsincludesubdomains=true"
+        - "traefik.http.middlewares.cihatertem-headers.headers.stspreload=true"
+        - "traefik.http.middlewares.cihatertem-headers.headers.stsseconds=63072000"
+        - "traefik.http.middlewares.cihatertem-headers.headers.permissionsPolicy=geolocation=(),midi=(),sync-xhr=(),microphone=(),camera=(),magnetometer=(),gyroscope=(),fullscreen=self,payment=()"
+        - "traefik.http.middlewares.cihatertem-headers.headers.contentSecurityPolicy=default-src 'self'; script-src 'self' https:; object-src 'self'; style-src 'self' https: data:; img-src 'self' https: data:; media-src 'self'; frame-src 'self'; font-src 'self' https: data:; connect-src 'self' https: data:; frame-ancestors 'self';"
       placement:
         constraints:
           - node.role==worker

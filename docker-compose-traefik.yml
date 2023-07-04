@@ -33,8 +33,12 @@ services:
       - 80:80
       - 443:443
       - 8080:8080
-    env_file:
-      - ./environments/traefik_environment.txt
+    environment:
+      AWS_ACCESS_KEY_ID_FILE: /run/secrets/traefik-aws-access-key-id
+      AWS_SECRET_ACCESS_KEY_FILE: /run/secrets/traefik-aws-secret-access-key
+    secrets:
+      - traefik-aws-secret-access-key
+      - traefik-aws-access-key-id
     volumes:
       - /var/run/docker.sock:/var/run/docker.sock
       - ./traefik.yml:/etc/traefik/traefik.yml
@@ -42,6 +46,12 @@ services:
     networks:
       - frontend
 
+
+secrets:
+  traefik-aws-secret-access-key:
+    external: true
+  traefik-aws-access-key-id:
+    external: true
 networks:
   frontend:
     external: true
