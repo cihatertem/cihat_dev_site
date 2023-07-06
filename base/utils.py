@@ -2,7 +2,15 @@ from PIL import Image, ImageOps
 from io import BytesIO
 from base import models
 from django.http import HttpRequest
+from django.http import JsonResponse
+from django.utils.deprecation import MiddlewareMixin
+from http import HTTPStatus
 
+
+class HealthCheckMiddleware(MiddlewareMixin):
+    def process_request(self, request):
+        if request.META['PATH_INFO'] == '/ping':
+            return JsonResponse({"response": "pong!"}, status=HTTPStatus.OK)
 
 def work_directory_path(instance, filename: str) -> str:
     return 'works/{0}/{1}'.format(instance.customer, filename)
