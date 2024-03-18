@@ -172,6 +172,7 @@ AWS_S3_REGION_NAME = os.getenv("AWS_S3_REGION_NAME")
 CSRF_TRUSTED_ORIGINS = [
     "https://cihatertem.dev",
     "https://www.cihatertem.dev",
+    os.getenv("IPV6"),
 ]
 
 if not DEBUG:
