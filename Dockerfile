@@ -33,4 +33,4 @@ USER django
 
 EXPOSE 8001
 
-CMD ["gunicorn", "--bind", "0.0.0.0:8000", "--workers", "2", "cihat_dev.wsgi:application"]
+CMD ["gunicorn", "--bind", "[::]:8001", "--workers", "2", "cihat_dev.wsgi:application"]
