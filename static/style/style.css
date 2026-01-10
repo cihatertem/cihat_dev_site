@@ -12,6 +12,7 @@
   from {
     width: 0;
   }
+
   to {
     width: 100%;
   }
@@ -21,6 +22,7 @@
   from {
     border-color: var(--clr-home);
   }
+
   to {
     border-color: transparent;
   }
@@ -33,6 +35,10 @@
   --clr-contact: #f163e7;
   --clr-font: rgba(255, 255, 255, 0.83);
   --clr-font-second: rgba(255, 255, 255, 0.73);
+}
+
+.website {
+  display: none;
 }
 
 * {
@@ -166,25 +172,29 @@ nav.second {
   margin-bottom: 4rem;
 }
 
-.home-link:hover, .home-link.active {
+.home-link:hover,
+.home-link.active {
   color: var(--clr-home);
   -webkit-text-stroke: 1px var(--clr-home);
   transform: scale(120%);
 }
 
-.skills-link:hover, .skills-link.active {
+.skills-link:hover,
+.skills-link.active {
   color: var(--clr-skills);
   -webkit-text-stroke: 1px var(--clr-skills);
   transform: scale(120%);
 }
 
-.works-link:hover, .works-link.active {
+.works-link:hover,
+.works-link.active {
   color: var(--clr-works);
   -webkit-text-stroke: 1px var(--clr-works);
   transform: scale(120%);
 }
 
-.contact-link:hover, .contact-link.active {
+.contact-link:hover,
+.contact-link.active {
   color: var(--clr-contact);
   -webkit-text-stroke: 1px var(--clr-contact);
   transform: scale(120%);
@@ -228,7 +238,7 @@ section.hero h1 {
   white-space: nowrap;
   overflow: hidden;
   animation: typewriter 1.3s steps(20) alternate,
-  blink 800ms steps(20) infinite normal;
+    blink 800ms steps(20) infinite normal;
   border-right: .6rem solid var(--clr-home);
 }
 

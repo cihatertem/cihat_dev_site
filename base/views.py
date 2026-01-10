@@ -24,24 +24,12 @@ def home_page(request):
         subject = request.POST.get("subject")
         email = request.POST.get("email")
         body = request.POST.get("body")
+        website = request.POST.get("website")
 
-        if spam_checker(name):
+        if website or spam_checker(name) or spam_checker(body) or spam_checker(subject):
             messages.success(
                 request,
-                "Your message was sent successfully.\nWe will touch you \
-                 back soon.")
-
-            return redirect("base:home")
-
-        if spam_checker(body):
-            messages.success(
-                request, "Your message was not sent .\nDONT MAKE SPAM!")
-
-            return redirect("base:home")
-
-        if spam_checker(subject):
-            messages.success(
-                request, "Your message was not sent .\nDONT MAKE SPAM!")
+                "Your message was sent successfully.\nThank you!")
 
             return redirect("base:home")
 
