@@ -1,6 +1,6 @@
 from django.shortcuts import render, redirect
 from .models import User
-from .utils import spam_checker, get_client_ip
+from .utils import get_client_ip
 import os
 from django.core.mail import send_mail
 from django.contrib import messages
@@ -26,7 +26,7 @@ def home_page(request):
         body = request.POST.get("body")
         website = request.POST.get("website")
 
-        if website or spam_checker(name) or spam_checker(body) or spam_checker(subject):
+        if website:
             messages.success(
                 request,
                 "Your message was sent successfully.\nThank you!")

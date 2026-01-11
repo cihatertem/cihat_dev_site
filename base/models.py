@@ -73,13 +73,3 @@ class Work(models.Model):
 
         return super(Work, self).save()
 
-
-class SpamFilter(models.Model):
-    id = models.UUIDField(
-        default=uuid.uuid4, unique=True, primary_key=True, editable=False
-    )
-    keyword = models.CharField(max_length=50)
-    created = models.DateTimeField(auto_now_add=True)
-
-    def __str__(self) -> str:
-        return self.keyword
