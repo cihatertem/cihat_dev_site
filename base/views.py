@@ -24,9 +24,9 @@ def home_page(request):
         subject = request.POST.get("subject")
         email = request.POST.get("email")
         body = request.POST.get("body")
-        website = request.POST.get("website")
+        website = request.POST.get("website","")
 
-        if website:
+        if website.strip():
             messages.success(
                 request,
                 "Your message was sent successfully.\nThank you!")
