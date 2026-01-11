@@ -10,6 +10,7 @@ For the full list of settings and their values, see
 https://docs.djangoproject.com/en/4.0/ref/settings/
 """
 
+import ipaddress
 import os
 from pathlib import Path
 from datetime import timedelta
@@ -171,10 +172,28 @@ AWS_S3_REGION_NAME = os.getenv("AWS_S3_REGION_NAME")
 if os.getenv("AWS_S3_ENDPOINT_URL") is not None:
     AWS_S3_ENDPOINT_URL = os.getenv("AWS_S3_ENDPOINT_URL")
 
+# gunicorn 2+ workers ratelimit issue
+CACHES = {
+    "default": {
+        "BACKEND": "django.core.cache.backends.db.DatabaseCache",
+        "LOCATION": "ratelimit_cache",
+    }
+}
+
+RATELIMIT_USE_CACHE = "default"
+
+_raw = os.getenv("TRUSTED_PROXY_NETS", "")
+TRUSTED_PROXY_NETS = []
+
+if _raw:
+    for net in _raw.split(","):
+        TRUSTED_PROXY_NETS.append(ipaddress.ip_network(net.strip()))
+
 if not DEBUG:
     CSRF_COOKIE_SECURE = True
     CSRF_COOKIE_HTTPONLY = True
     SESSION_COOKIE_SECURE = True
     SECURE_SSL_REDIRECT = True
+    USE_X_FORWARDED_HOST = True
     SECURE_PROXY_SSL_HEADER = ("HTTP_X_FORWARDED_PROTO", "https")
     SESSION_COOKIE_HTTPONLY = True
