@@ -1,5 +1,6 @@
 /db_son.sqlite3
 /.env
+.venv/
 /venv/
 /media/
 /.idea/

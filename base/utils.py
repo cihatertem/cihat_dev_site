@@ -1,11 +1,15 @@
-from PIL import Image, ImageOps
+import ipaddress
+import math
 from io import BytesIO
-from django.http import HttpRequest
+from random import random
+
+from http import HTTPStatus
 from django.http import JsonResponse
 from django.utils.deprecation import MiddlewareMixin
-from http import HTTPStatus
 from django.conf import settings
-import ipaddress
+from PIL import Image, ImageOps
+
+CAPTCHA_SESSION_KEY = "contact_captcha_answer"
 
 class HealthCheckMiddleware(MiddlewareMixin):
     def process_request(self, request):
@@ -47,3 +51,28 @@ def get_client_ip(request) -> str | None:
 def client_ip_key(group, request):
     # request None olmasın, ip yoksa sabit değer ver
     return get_client_ip(request) or "unknown"
+
+
+def _parse_int(value: str | None) -> int | None:
+    try:
+        return int(value) if value not in (None, "") else None
+    except (TypeError, ValueError):
+        return None
+
+
+def captcha_is_valid(request) -> bool:
+    """
+    Returns True if posted captcha matches expected answer in session.
+    Missing/invalid values return False.
+    """
+    expected = _parse_int(request.session.get(CAPTCHA_SESSION_KEY))
+    got = _parse_int(request.POST.get("captcha"))
+
+    return expected is not None and got is not None and got == expected
+
+
+def _generate_captcha(request):
+    num_one = math.floor(random() * 10) + 1
+    num_two = math.floor(random() * 10) + 1
+    request.session[CAPTCHA_SESSION_KEY] = num_one + num_two
+    return num_one, num_two
