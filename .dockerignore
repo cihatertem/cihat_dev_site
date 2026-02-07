@@ -15,3 +15,4 @@ traefik.yml
 aws_user_data.sh
 swarm/
 spam_filter.txt
+*.old
