@@ -131,7 +131,7 @@ STATIC_ROOT = BASE_DIR / "staticfiles/"
 
 
 MEDIA_URL = "media/"
-MEDIA_ROOT = BASE_DIR / "media/"
+
 
 # Default primary key field type
 # https://docs.djangoproject.com/en/4.0/ref/settings/#default-auto-field
@@ -185,19 +185,24 @@ DATABASES = {
         # },
     }
 }
+USE_S3 = (not DEBUG) and bool(os.getenv("CIHAT_BUCKET_NAME"))
 
-STORAGES = {
-    "default": {"BACKEND": "storages.backends.s3boto3.S3Boto3Storage"},
-    "staticfiles": {"BACKEND": "storages.backends.s3boto3.S3StaticStorage"},
-}
+if USE_S3:
+    STORAGES = {
+        "default": {"BACKEND": "storages.backends.s3boto3.S3Boto3Storage"},
+        "staticfiles": {"BACKEND": "storages.backends.s3boto3.S3StaticStorage"},
+    }
 
-AWS_ACCESS_KEY_ID = get_secret("AWS_ACCESS_KEY_ID")
-AWS_SECRET_ACCESS_KEY = get_secret("AWS_SECRET_ACCESS_KEY")
-AWS_STORAGE_BUCKET_NAME = os.getenv("CIHAT_BUCKET_NAME")
-AWS_QUERYSTRING_AUTH = False
-AWS_S3_REGION_NAME = os.getenv("AWS_S3_REGION_NAME")
-if os.getenv("AWS_S3_ENDPOINT_URL") is not None:
-    AWS_S3_ENDPOINT_URL = os.getenv("AWS_S3_ENDPOINT_URL")
+    AWS_ACCESS_KEY_ID = get_secret("AWS_ACCESS_KEY_ID")
+    AWS_SECRET_ACCESS_KEY = get_secret("AWS_SECRET_ACCESS_KEY")
+    AWS_STORAGE_BUCKET_NAME = os.getenv("CIHAT_BUCKET_NAME")
+    AWS_QUERYSTRING_AUTH = False
+    AWS_S3_REGION_NAME = os.getenv("AWS_S3_REGION_NAME")
+    if os.getenv("AWS_S3_ENDPOINT_URL") is not None:
+        AWS_S3_ENDPOINT_URL = os.getenv("AWS_S3_ENDPOINT_URL")
+    MEDIA_ROOT = None
+else:
+    MEDIA_ROOT = BASE_DIR / "media/"
 
 # gunicorn 2+ workers ratelimit issue
 CACHES = {
