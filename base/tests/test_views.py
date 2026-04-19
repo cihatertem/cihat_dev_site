@@ -11,7 +11,7 @@ from base.utils import CAPTCHA_SESSION_KEY
 
 class HomePageViewTests(TestCase):
     def setUp(self):
-        # Clear cache since the view uses cache_page
+        # Clear cache since the view caches data
         cache.clear()
 
         self.client = Client()

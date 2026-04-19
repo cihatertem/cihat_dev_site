@@ -1,9 +1,9 @@
 import os
 
 from django.contrib import messages
+from django.core.cache import cache
 from django.core.mail import send_mail
 from django.shortcuts import redirect, render
-from django.views.decorators.cache import cache_page
 from django.views.decorators.http import require_http_methods
 from django_ratelimit.decorators import ratelimit
 
@@ -23,7 +23,6 @@ CONTACT_RATE_LIMIT = "2/m"
 CONTACT_RATE_LIMIT_KEY = "ip"
 
 
-@cache_page(60 * 15)
 @ratelimit(
     key=client_ip_key,
     rate=CONTACT_RATE_LIMIT,
@@ -34,10 +33,16 @@ CONTACT_RATE_LIMIT_KEY = "ip"
 def home_page(request):
     template = "base/home.html"
     user_email = os.getenv("EMAIL")
-    user = User.objects.get(email=user_email)
-    skills = user.skill_set.all()
-    works = user.work_set.all()
-    context = {"skills": skills, "works": works}
+
+    context = cache.get("home_context")
+    if not context:
+        user = User.objects.get(email=user_email)
+        skills = list(user.skill_set.all())
+        works = list(user.work_set.all())
+        context = {"skills": skills, "works": works}
+        cache.set("home_context", context, 60 * 15)
+    else:
+        context = context.copy()
 
     if request.method == "POST":
         if getattr(request, "limited", False):
