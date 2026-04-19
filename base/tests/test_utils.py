@@ -1,9 +1,10 @@
+import ipaddress
 from http import HTTPStatus
 
 from django.http import JsonResponse
-from django.test import RequestFactory, TestCase
+from django.test import RequestFactory, TestCase, override_settings
 
-from base.utils import HealthCheckMiddleware, _parse_int
+from base.utils import HealthCheckMiddleware, _parse_int, get_client_ip
 
 
 class HealthCheckMiddlewareTest(TestCase):
@@ -52,3 +53,46 @@ class ParseIntTest(TestCase):
     def test_type_error(self):
         self.assertIsNone(_parse_int([1, 2, 3]))
         self.assertIsNone(_parse_int({"a": 1}))
+
+
+class GetClientIpTest(TestCase):
+    def setUp(self):
+        self.factory = RequestFactory()
+
+    def test_missing_remote_addr(self):
+        request = self.factory.get("/")
+        if "REMOTE_ADDR" in request.META:
+            del request.META["REMOTE_ADDR"]
+        self.assertIsNone(get_client_ip(request))
+
+    def test_no_trusted_proxies(self):
+        request = self.factory.get("/", REMOTE_ADDR="192.168.1.5")
+        self.assertEqual(get_client_ip(request), "192.168.1.5")
+
+    @override_settings(TRUSTED_PROXY_NETS=[ipaddress.ip_network("10.0.0.0/8")])
+    def test_remote_addr_not_in_trusted(self):
+        request = self.factory.get(
+            "/", REMOTE_ADDR="192.168.1.5", HTTP_X_FORWARDED_FOR="203.0.113.195"
+        )
+        self.assertEqual(get_client_ip(request), "192.168.1.5")
+
+    @override_settings(TRUSTED_PROXY_NETS=[ipaddress.ip_network("10.0.0.0/8")])
+    def test_remote_addr_in_trusted_no_xff(self):
+        request = self.factory.get("/", REMOTE_ADDR="10.0.0.5")
+        self.assertEqual(get_client_ip(request), "10.0.0.5")
+
+    @override_settings(TRUSTED_PROXY_NETS=[ipaddress.ip_network("10.0.0.0/8")])
+    def test_remote_addr_in_trusted_with_xff(self):
+        request = self.factory.get(
+            "/", REMOTE_ADDR="10.0.0.5", HTTP_X_FORWARDED_FOR="203.0.113.195"
+        )
+        self.assertEqual(get_client_ip(request), "203.0.113.195")
+
+    @override_settings(TRUSTED_PROXY_NETS=[ipaddress.ip_network("10.0.0.0/8")])
+    def test_remote_addr_in_trusted_with_xff_multiple(self):
+        request = self.factory.get(
+            "/",
+            REMOTE_ADDR="10.0.0.5",
+            HTTP_X_FORWARDED_FOR="203.0.113.195, 198.51.100.1, 192.0.2.1",
+        )
+        self.assertEqual(get_client_ip(request), "203.0.113.195")

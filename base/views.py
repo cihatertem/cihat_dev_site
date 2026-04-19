@@ -1,4 +1,13 @@
-from django.shortcuts import render, redirect
+import os
+
+from django.contrib import messages
+from django.core.mail import send_mail
+from django.shortcuts import redirect, render
+from django.views.decorators.cache import cache_page
+from django.views.decorators.http import require_http_methods
+from django_ratelimit.decorators import ratelimit
+
+from .forms import ContactForm
 from .models import User
 from .utils import (
     CAPTCHA_SESSION_KEY,
@@ -7,12 +16,6 @@ from .utils import (
     client_ip_key,
     get_client_ip,
 )
-import os
-from django.core.mail import send_mail
-from django.contrib import messages
-from django.views.decorators.http import require_http_methods
-from django.views.decorators.cache import cache_page
-from django_ratelimit.decorators import ratelimit
 
 # Create your views here.
 
@@ -29,15 +32,12 @@ CONTACT_RATE_LIMIT_KEY = "ip"
 )
 @require_http_methods(["GET", "POST"])
 def home_page(request):
-    template = 'base/home.html'
-    user_email = os.getenv('EMAIL')
+    template = "base/home.html"
+    user_email = os.getenv("EMAIL")
     user = User.objects.get(email=user_email)
     skills = user.skill_set.all()
     works = user.work_set.all()
-    context = {
-        'skills': skills,
-        'works': works
-    }
+    context = {"skills": skills, "works": works}
 
     if request.method == "POST":
         if getattr(request, "limited", False):
@@ -55,42 +55,45 @@ def home_page(request):
 
         request.session.pop(CAPTCHA_SESSION_KEY, None)
 
-        name = request.POST.get("name")
-        subject = request.POST.get("subject")
-        email = request.POST.get("email")
-        body = request.POST.get("body")
-        website = request.POST.get("website","")
+        form = ContactForm(request.POST)
+        if form.is_valid():
+            name = form.cleaned_data.get("name")
+            subject = form.cleaned_data.get("subject")
+            email = form.cleaned_data.get("email")
+            body = form.cleaned_data.get("body")
+            website = form.cleaned_data.get("website", "")
 
-        if website.strip():
-            messages.success(
-                request,
-                "Your message was sent successfully.\nThank you!")
+            if website.strip():
+                messages.success(
+                    request, "Your message was sent successfully.\nThank you!"
+                )
 
-            return redirect("base:home")
+                return redirect("base:home")
 
-        ip_address = get_client_ip(request)
+            ip_address = get_client_ip(request)
 
-        send_mail(
-            subject,
-            f"""
+            send_mail(
+                subject,
+                f"""
             From {name}, {email}, {ip_address},\n
             Subject {subject},\n
             {body}\n
             Site: www.cihatertem.dev
             """,
-            email,
-            (user_email,),
-            fail_silently=False,
-        )
-        messages.success(
-            request, "Your message was sent successfully.\nWe will touch \
-            you back soon.")
+                email,
+                (user_email,),
+                fail_silently=False,
+            )
+            messages.success(
+                request,
+                "Your message was sent successfully.\nWe will touch \
+            you back soon.",
+            )
 
-        return redirect("base:home")
+            return redirect("base:home")
 
     num_one, num_two = _generate_captcha(request)
     context["num1"] = num_one
-    context["num2"] =num_two
-
+    context["num2"] = num_two
 
     return render(request, template, context)

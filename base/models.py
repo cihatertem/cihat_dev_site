@@ -57,7 +57,7 @@ class Work(models.Model):
         return self.customer
 
     def save(self, *args, **kwargs):
-        if self.snapshot:
+        if self.snapshot and not getattr(self.snapshot, "_committed", True):
             try:
                 # Accessing self.snapshot.file can raise FileNotFoundError if the file doesn't exist.
                 # Therefore we place this inside the try-except block.
