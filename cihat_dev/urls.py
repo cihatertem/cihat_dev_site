@@ -1,14 +1,15 @@
-from django.contrib import admin
-from django.urls import path, include
-# static&media urls
-from django.conf import settings
-from django.conf.urls.static import static
 #  dotenv
 import os
 
+# static&media urls
+from django.conf import settings
+from django.conf.urls.static import static
+from django.contrib import admin
+from django.urls import include, path
+
 urlpatterns = [
-    path(os.getenv("ADMIN_ADDRESS"), admin.site.urls),
-    path('', include('base.urls', namespace='base')),
+    path(os.getenv("ADMIN_ADDRESS", "admin/"), admin.site.urls),
+    path("", include("base.urls", namespace="base")),
 ]
 
 if settings.DEBUG:

@@ -1,23 +1,25 @@
 import ipaddress
 import math
-from io import BytesIO
-from random import random
-
+import secrets
 from http import HTTPStatus
+from io import BytesIO
+
+from django.conf import settings
 from django.http import JsonResponse
 from django.utils.deprecation import MiddlewareMixin
-from django.conf import settings
 from PIL import Image, ImageOps
 
 CAPTCHA_SESSION_KEY = "contact_captcha_answer"
 
+
 class HealthCheckMiddleware(MiddlewareMixin):
     def process_request(self, request):
-        if request.META['PATH_INFO'] == '/ping':
+        if request.META["PATH_INFO"] == "/ping":
             return JsonResponse({"response": "pong!"}, status=HTTPStatus.OK)
 
+
 def work_directory_path(instance, filename: str) -> str:
-    return 'works/{0}/{1}'.format(instance.customer, filename)
+    return "works/{0}/{1}".format(instance.customer, filename)
 
 
 def photo_resizer(image: Image, size: int) -> BytesIO:
@@ -26,7 +28,7 @@ def photo_resizer(image: Image, size: int) -> BytesIO:
         image = image.convert("RGB")
     image.thumbnail((size, size))
     image = ImageOps.exif_transpose(image)
-    image.save(output, format='JPEG', quality=100)
+    image.save(output, format="JPEG", quality=100)
     output.seek(0)
     return output
 
@@ -48,6 +50,7 @@ def get_client_ip(request) -> str | None:
 
     return remote
 
+
 def client_ip_key(group, request):
     # request None olmasın, ip yoksa sabit değer ver
     return get_client_ip(request) or "unknown"
@@ -56,7 +59,7 @@ def client_ip_key(group, request):
 def _parse_int(value: str | None) -> int | None:
     try:
         return int(value) if value not in (None, "") else None
-    except (TypeError, ValueError):
+    except TypeError, ValueError:
         return None
 
 
@@ -72,7 +75,7 @@ def captcha_is_valid(request) -> bool:
 
 
 def _generate_captcha(request):
-    num_one = math.floor(random() * 10) + 1
-    num_two = math.floor(random() * 10) + 1
+    num_one = secrets.randbelow(10) + 1
+    num_two = secrets.randbelow(10) + 1
     request.session[CAPTCHA_SESSION_KEY] = num_one + num_two
     return num_one, num_two

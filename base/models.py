@@ -1,10 +1,12 @@
-from django.db import models
-import uuid
-from django.contrib.auth.models import AbstractUser
-from base.utils import work_directory_path, photo_resizer
-from PIL import Image
-from django.core.files.uploadedfile import InMemoryUploadedFile
 import sys
+import uuid
+
+from django.contrib.auth.models import AbstractUser
+from django.core.files.uploadedfile import InMemoryUploadedFile
+from django.db import models
+from PIL import Image
+
+from base.utils import photo_resizer, work_directory_path
 
 
 class User(AbstractUser):
@@ -72,4 +74,3 @@ class Work(models.Model):
                 )
 
         return super(Work, self).save()
-

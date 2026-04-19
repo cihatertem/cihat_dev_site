@@ -1,7 +1,7 @@
 from django.contrib import admin
-from .models import Skill, Work
 from django.contrib.auth.admin import UserAdmin
-from .models import User
+
+from .models import Skill, User, Work
 
 # Register your models here.
 admin.site.register(User, UserAdmin)
@@ -25,4 +25,3 @@ class SkillsAdmin(admin.ModelAdmin):
     class Meta:
         __slot__ = "model"
         model = Skill
-

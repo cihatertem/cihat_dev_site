@@ -11,6 +11,7 @@ import os
 from django.core.mail import send_mail
 from django.contrib import messages
 from django.views.decorators.http import require_http_methods
+from django.views.decorators.cache import cache_page
 from django_ratelimit.decorators import ratelimit
 
 # Create your views here.
@@ -19,6 +20,7 @@ CONTACT_RATE_LIMIT = "2/m"
 CONTACT_RATE_LIMIT_KEY = "ip"
 
 
+@cache_page(60 * 15)
 @ratelimit(
     key=client_ip_key,
     rate=CONTACT_RATE_LIMIT,
