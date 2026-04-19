@@ -2,7 +2,7 @@ import os
 
 from django.contrib import messages
 from django.core.cache import cache
-from django.core.mail import send_mail
+from django.core.mail import EmailMessage
 from django.shortcuts import redirect, render
 from django.views.decorators.http import require_http_methods
 from django_ratelimit.decorators import ratelimit
@@ -77,7 +77,7 @@ def home_page(request):
 
             ip_address = get_client_ip(request)
 
-            send_mail(
+            email_message = EmailMessage(
                 subject,
                 f"""
             From {name}, {email}, {ip_address},\n
@@ -85,10 +85,12 @@ def home_page(request):
             {body}\n
             Site: www.cihatertem.dev
             """,
-                email,
-                (user_email,),
-                fail_silently=False,
+                user_email,
+                [user_email],
+                reply_to=[email],
             )
+            email_message.send(fail_silently=False)
+
             messages.success(
                 request,
                 "Your message was sent successfully.\nWe will touch \

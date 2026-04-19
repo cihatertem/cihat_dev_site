@@ -95,4 +95,37 @@ class GetClientIpTest(TestCase):
             REMOTE_ADDR="10.0.0.5",
             HTTP_X_FORWARDED_FOR="203.0.113.195, 198.51.100.1, 192.0.2.1",
         )
-        self.assertEqual(get_client_ip(request), "203.0.113.195")
+        self.assertEqual(get_client_ip(request), "192.0.2.1")
+
+    @override_settings(TRUSTED_PROXY_NETS=[ipaddress.ip_network("10.0.0.0/8")])
+    def test_spoofing_xff(self):
+        # Client 203.0.113.1 tries to spoof its IP by sending Fake1, Fake2
+        # It connects through trusted proxy 10.0.0.5
+        request = self.factory.get(
+            "/",
+            REMOTE_ADDR="10.0.0.5",
+            HTTP_X_FORWARDED_FOR="8.8.8.8, 1.1.1.1, 203.0.113.1",
+        )
+        self.assertEqual(get_client_ip(request), "203.0.113.1")
+
+    @override_settings(TRUSTED_PROXY_NETS=[ipaddress.ip_network("10.0.0.0/8")])
+    def test_xff_only_trusted_proxies(self):
+        # The request comes from 10.0.0.5
+        # The XFF header only contains other trusted proxies.
+        # We expect the leftmost proxy to be returned.
+        request = self.factory.get(
+            "/",
+            REMOTE_ADDR="10.0.0.5",
+            HTTP_X_FORWARDED_FOR="10.1.1.1, 10.2.2.2, 10.3.3.3",
+        )
+        self.assertEqual(get_client_ip(request), "10.1.1.1")
+
+    @override_settings(TRUSTED_PROXY_NETS=[ipaddress.ip_network("10.0.0.0/8")])
+    def test_xff_with_invalid_ip(self):
+        # The XFF header contains invalid IPs
+        request = self.factory.get(
+            "/",
+            REMOTE_ADDR="10.0.0.5",
+            HTTP_X_FORWARDED_FOR="192.168.1.5, invalid-ip",
+        )
+        self.assertEqual(get_client_ip(request), "invalid-ip")

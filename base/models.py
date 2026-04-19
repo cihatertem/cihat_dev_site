@@ -76,4 +76,4 @@ class Work(models.Model):
             except FileNotFoundError:
                 pass
 
-        return super(Work, self).save(*args, **kwargs)
+        return super().save(*args, **kwargs)

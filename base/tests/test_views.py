@@ -91,6 +91,8 @@ class HomePageViewTests(TestCase):
         self.assertEqual(mail.outbox[0].subject, "Test Subject")
         self.assertIn("Test Body", mail.outbox[0].body)
         self.assertEqual(mail.outbox[0].to, [self.test_email])
+        self.assertEqual(mail.outbox[0].from_email, self.test_email)
+        self.assertEqual(mail.outbox[0].reply_to, ["sender@example.com"])
 
         messages = list(response.wsgi_request._messages)
         self.assertEqual(len(messages), 1)

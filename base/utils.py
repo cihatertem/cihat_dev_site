@@ -38,15 +38,34 @@ def get_client_ip(request) -> str | None:
     if not remote:
         return None
 
-    ra = ipaddress.ip_address(remote)
+    try:
+        ra = ipaddress.ip_address(remote)
+    except ValueError:
+        return remote
 
     trusted_nets = getattr(settings, "TRUSTED_PROXY_NETS", None) or []
 
-    # Sadece trusted proxy'den geliyorsa XFF'e güven
+    # Sadece trusted proxy'den geliyorsa XFF'i parse et
     if trusted_nets and any(ra in net for net in trusted_nets):
         xff = request.META.get("HTTP_X_FORWARDED_FOR")
         if xff:
-            return xff.split(",")[0].strip()
+            ips = [ip.strip() for ip in xff.split(",")]
+            # Sağdan sola (en son proxy'den istemciye doğru) ilerle
+            for ip_str in reversed(ips):
+                try:
+                    ip_obj = ipaddress.ip_address(ip_str)
+                except ValueError:
+                    # Geçersiz IP formatı - güvenilmez kabul et
+                    return ip_str
+
+                # Eğer bu IP trusted ağlardan birindeyse, önceki IP'ye geçmeye devam et.
+                # Değilse, bulduğumuz ilk untrusted IP gerçek istemcidir.
+                is_trusted = any(ip_obj in net for net in trusted_nets)
+                if not is_trusted:
+                    return ip_str
+
+            # Tüm IP'ler trusted ise, en soldakini dönebiliriz.
+            return ips[0]
 
     return remote
 
