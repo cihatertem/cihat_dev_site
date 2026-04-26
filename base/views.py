@@ -36,9 +36,13 @@ def home_page(request):
 
     context = cache.get("home_context")
     if not context:
-        user = User.objects.get(email=user_email)
-        skills = list(user.skill_set.all())
-        works = list(user.work_set.all())
+        user = (
+            User.objects.prefetch_related("skill_set", "work_set")
+            .filter(email=user_email)
+            .first()
+        )
+        skills = list(user.skill_set.all()) if user else []
+        works = list(user.work_set.all()) if user else []
         context = {"skills": skills, "works": works}
         cache.set("home_context", context, 60 * 15)
     else:

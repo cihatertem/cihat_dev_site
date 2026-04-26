@@ -158,3 +158,21 @@ class HomePageViewTests(TestCase):
 
         messages = list(response.wsgi_request._messages)
         self.assertTrue(any("Çok fazla istek gönderdiniz" in str(m) for m in messages))
+
+    def test_home_page_multiple_users_with_email(self):
+        # Create another user with the same email
+        User.objects.create_user(
+            username="testuser2", email=self.test_email, password="password123"
+        )
+        # Should not raise MultipleObjectsReturned
+        response = self.client.get(self.url)
+        self.assertEqual(response.status_code, 200)
+
+    def test_home_page_no_user_with_email(self):
+        # Clear users
+        User.objects.all().delete()
+        # Should not raise DoesNotExist
+        response = self.client.get(self.url)
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(list(response.context["skills"]), [])
+        self.assertEqual(list(response.context["works"]), [])

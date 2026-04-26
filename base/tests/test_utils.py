@@ -4,7 +4,13 @@ from http import HTTPStatus
 from django.http import JsonResponse
 from django.test import RequestFactory, TestCase, override_settings
 
-from base.utils import HealthCheckMiddleware, _parse_int, get_client_ip
+from base.utils import (
+    CAPTCHA_SESSION_KEY,
+    HealthCheckMiddleware,
+    _parse_int,
+    captcha_is_valid,
+    get_client_ip,
+)
 
 
 class HealthCheckMiddlewareTest(TestCase):
@@ -129,3 +135,38 @@ class GetClientIpTest(TestCase):
             HTTP_X_FORWARDED_FOR="192.168.1.5, invalid-ip",
         )
         self.assertEqual(get_client_ip(request), "invalid-ip")
+
+
+class CaptchaIsValidTest(TestCase):
+    def setUp(self):
+        self.factory = RequestFactory()
+
+    def test_captcha_is_valid_success(self):
+        request = self.factory.post("/", data={"captcha": "15"})
+        request.session = {CAPTCHA_SESSION_KEY: "15"}
+        self.assertTrue(captcha_is_valid(request))
+
+    def test_captcha_is_valid_mismatch(self):
+        request = self.factory.post("/", data={"captcha": "10"})
+        request.session = {CAPTCHA_SESSION_KEY: "15"}
+        self.assertFalse(captcha_is_valid(request))
+
+    def test_captcha_is_valid_missing_session(self):
+        request = self.factory.post("/", data={"captcha": "15"})
+        request.session = {}
+        self.assertFalse(captcha_is_valid(request))
+
+    def test_captcha_is_valid_missing_post(self):
+        request = self.factory.post("/", data={})
+        request.session = {CAPTCHA_SESSION_KEY: "15"}
+        self.assertFalse(captcha_is_valid(request))
+
+    def test_captcha_is_valid_non_integer_post(self):
+        request = self.factory.post("/", data={"captcha": "abc"})
+        request.session = {CAPTCHA_SESSION_KEY: "15"}
+        self.assertFalse(captcha_is_valid(request))
+
+    def test_captcha_is_valid_non_integer_session(self):
+        request = self.factory.post("/", data={"captcha": "15"})
+        request.session = {CAPTCHA_SESSION_KEY: "abc"}
+        self.assertFalse(captcha_is_valid(request))
