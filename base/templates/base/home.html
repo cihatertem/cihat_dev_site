@@ -5,14 +5,14 @@
     <meta charset="UTF-8">
     <meta http-equiv="X-UA-Compatible" content="IE=edge"/>
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <link rel="stylesheet" href="{% static 'style/swiper.css' %}"/>
-    <link rel="stylesheet" href="{% static 'style/style.css' %}">
+    <link rel="stylesheet" href="{% static 'style/swiper.css' %}" nonce="{{ csp_nonce }}"/>
+    <link rel="stylesheet" href="{% static 'style/style.css' %}" nonce="{{ csp_nonce }}"/>
     <meta name="description"
           content="I'm a full-stack web developer in Ankara, Turkey. I design creative web sites, build new projects
           and sometimes coding for fun!"/>
     <meta name="author" content="Cihat Ertem">
     <meta name="keywords" content="Cihat Ertem, Web Designer, Web Developer, Coder, Programmer, SEO, Html">
-    <link rel="shortcut icon" type="image/png" href="{% static 'images/favicon.ico' %}"/>
+    <link rel="shortcut icon" type="image/png" href="{% static 'images/favicon.ico' %}" nonce="{{ csp_nonce }}"/>
     <meta name="msvalidate.01" content="3345FA589A832569C353F3C37350765A"/>
     <meta name="yandex-verification" content="13890713697da7d5"/>
     <meta name='Petal-Search-site-verification' content='3786843cfd'/>
@@ -183,7 +183,7 @@
     </p>
 </div>
 
-<script src="{% static 'js/swiper.js' %}"></script>
-<script src="{% static 'js/script.js' %}"></script>
+<script src="{% static 'js/swiper.js' %}" nonce="{{ csp_nonce }}"></script>
+<script src="{% static 'js/script.js' %}" nonce="{{ csp_nonce }}"></script>
 </body>
 </html>

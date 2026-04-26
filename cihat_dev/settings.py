@@ -15,6 +15,8 @@ import os
 from datetime import timedelta
 from pathlib import Path
 
+from django.utils.csp import CSP
+
 
 def get_secret(key: str, default: str = "") -> str:
     value = os.getenv(key, default)
@@ -63,6 +65,7 @@ MIDDLEWARE = [
     "base.middlewares.TrustedProxyMiddleware",
     "base.utils.HealthCheckMiddleware",
     "django.middleware.security.SecurityMiddleware",
+    "django.middleware.csp.ContentSecurityPolicyMiddleware",
     "django.contrib.sessions.middleware.SessionMiddleware",
     "django.middleware.common.CommonMiddleware",
     "django.middleware.csrf.CsrfViewMiddleware",
@@ -84,6 +87,7 @@ TEMPLATES = [
                 "django.template.context_processors.request",
                 "django.contrib.auth.context_processors.auth",
                 "django.contrib.messages.context_processors.messages",
+                "django.template.context_processors.csp",
             ],
         },
     },
@@ -181,9 +185,25 @@ DATABASES = {
 USE_S3 = (not DEBUG) and bool(os.getenv("CIHAT_BUCKET_NAME"))
 
 if USE_S3:
+    AWS_S3_CUSTOM_DOMAIN = os.getenv("AWS_S3_CUSTOM_DOMAIN", "static.cihatertem.dev")
     STORAGES = {
-        "default": {"BACKEND": "storages.backends.s3boto3.S3Boto3Storage"},
-        "staticfiles": {"BACKEND": "storages.backends.s3boto3.S3StaticStorage"},
+        "default": {
+            "BACKEND": "storages.backends.s3.S3Storage",
+            "OPTIONS": {
+                "location": "media",
+                "custom_domain": AWS_S3_CUSTOM_DOMAIN,
+            },
+        },
+        "staticfiles": {
+            "BACKEND": "base.storages.CustomS3ManifestStaticStorage",
+            "OPTIONS": {
+                "location": "static",
+                "custom_domain": AWS_S3_CUSTOM_DOMAIN,
+                "object_parameters": {
+                    "CacheControl": "max-age=31536000, public",
+                },
+            },
+        },
     }
 
     AWS_ACCESS_KEY_ID = get_secret("AWS_ACCESS_KEY_ID")
@@ -245,3 +265,34 @@ if not DEBUG:
             os.getenv("DJANGO_SECURE_HSTS_INCLUDE_SUBDOMAINS", "1") == "1"
         )
         SECURE_HSTS_PRELOAD = os.getenv("DJANGO_SECURE_HSTS_PRELOAD", "1") == "1"
+SECURE_CSP = {
+    "default-src": [CSP.SELF],
+    "script-src": [
+        CSP.SELF,
+        "https://static.cihatertem.dev",
+        CSP.NONCE,
+        # CSP.STRICT_DYNAMIC, # Can be enabled if all scripts are loaded with nonces
+    ],
+    "object-src": [CSP.NONE],
+    "style-src": [
+        CSP.SELF,
+        "https://static.cihatertem.dev",
+        "https://fonts.cihatertem.dev",
+        CSP.NONCE,
+    ],
+    "img-src": [
+        CSP.SELF,
+        "https://static.cihatertem.dev",
+        "data:",
+    ],
+    "media-src": [CSP.SELF, "https://static.cihatertem.dev"],
+    "frame-src": [CSP.SELF],
+    "font-src": [
+        CSP.SELF,
+        "https://static.cihatertem.dev",
+        "https://fonts.gstatic.com",
+        "data:",
+    ],
+    "connect-src": [CSP.SELF, "https://static.cihatertem.dev"],
+    "frame-ancestors": [CSP.SELF],
+}
