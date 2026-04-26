@@ -7,8 +7,10 @@ from django.test import RequestFactory, TestCase, override_settings
 from base.utils import (
     CAPTCHA_SESSION_KEY,
     HealthCheckMiddleware,
+    _generate_captcha,
     _parse_int,
     captcha_is_valid,
+    client_ip_key,
     get_client_ip,
     work_directory_path,
 )
@@ -72,6 +74,21 @@ class ParseIntTest(TestCase):
     def test_type_error(self):
         self.assertIsNone(_parse_int([1, 2, 3]))
         self.assertIsNone(_parse_int({"a": 1}))
+
+
+class ClientIpKeyTest(TestCase):
+    def setUp(self):
+        self.factory = RequestFactory()
+
+    def test_client_ip_key_with_ip(self):
+        request = self.factory.get("/", REMOTE_ADDR="192.168.1.5")
+        self.assertEqual(client_ip_key("test_group", request), "192.168.1.5")
+
+    def test_client_ip_key_without_ip(self):
+        request = self.factory.get("/")
+        if "REMOTE_ADDR" in request.META:
+            del request.META["REMOTE_ADDR"]
+        self.assertEqual(client_ip_key("test_group", request), "unknown")
 
 
 class GetClientIpTest(TestCase):
@@ -183,3 +200,26 @@ class CaptchaIsValidTest(TestCase):
         request = self.factory.post("/", data={"captcha": "15"})
         request.session = {CAPTCHA_SESSION_KEY: "abc"}
         self.assertFalse(captcha_is_valid(request))
+
+
+class GenerateCaptchaTest(TestCase):
+    def setUp(self):
+        self.factory = RequestFactory()
+
+    def test_generate_captcha(self):
+        request = self.factory.get("/")
+        request.session = {}
+
+        num_one, num_two = _generate_captcha(request)
+
+        # Assert returned values are integers between 1 and 10
+        self.assertIsInstance(num_one, int)
+        self.assertIsInstance(num_two, int)
+        self.assertGreaterEqual(num_one, 1)
+        self.assertLessEqual(num_one, 10)
+        self.assertGreaterEqual(num_two, 1)
+        self.assertLessEqual(num_two, 10)
+
+        # Assert the session contains the sum of the two numbers
+        self.assertIn(CAPTCHA_SESSION_KEY, request.session)
+        self.assertEqual(request.session[CAPTCHA_SESSION_KEY], num_one + num_two)

@@ -1,4 +1,5 @@
 import os
+import time
 
 from django.core import mail
 from django.core.cache import cache
@@ -36,6 +37,7 @@ class HomePageViewTests(TestCase):
         self.work = Work.objects.first()
 
     def tearDown(self):
+        mail.outbox.clear()
         if self.original_email is not None:
             os.environ["EMAIL"] = self.original_email
         else:
@@ -84,8 +86,15 @@ class HomePageViewTests(TestCase):
             "captcha": str(captcha_answer),
             "website": "",
         }
+        mail.outbox.clear()
         response = self.client.post(self.url, data)
         self.assertRedirects(response, self.url)
+
+        # Wait dynamically for email thread to finish
+        timeout = 2.0
+        start_time = time.time()
+        while len(mail.outbox) == 0 and time.time() - start_time < timeout:
+            time.sleep(0.01)
 
         self.assertEqual(len(mail.outbox), 1)
         self.assertEqual(mail.outbox[0].subject, "Test Subject")

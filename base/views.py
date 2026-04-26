@@ -1,4 +1,5 @@
 import os
+import threading
 
 from django.contrib import messages
 from django.core.cache import cache
@@ -93,7 +94,10 @@ def home_page(request):
                 [user_email],
                 reply_to=[email],
             )
-            email_message.send(fail_silently=False)
+
+            threading.Thread(
+                target=email_message.send, kwargs={"fail_silently": False}
+            ).start()
 
             messages.success(
                 request,
