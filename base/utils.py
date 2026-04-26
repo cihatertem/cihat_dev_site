@@ -56,7 +56,7 @@ def get_client_ip(request) -> str | None:
                     ip_obj = ipaddress.ip_address(ip_str)
                 except ValueError:
                     # Geçersiz IP formatı - güvenilmez kabul et
-                    return ip_str
+                    return "unknown"
 
                 # Eğer bu IP trusted ağlardan birindeyse, önceki IP'ye geçmeye devam et.
                 # Değilse, bulduğumuz ilk untrusted IP gerçek istemcidir.

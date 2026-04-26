@@ -164,7 +164,7 @@ class GetClientIpTest(TestCase):
             REMOTE_ADDR="10.0.0.5",
             HTTP_X_FORWARDED_FOR="192.168.1.5, invalid-ip",
         )
-        self.assertEqual(get_client_ip(request), "invalid-ip")
+        self.assertEqual(get_client_ip(request), "unknown")
 
 
 class CaptchaIsValidTest(TestCase):
