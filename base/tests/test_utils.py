@@ -10,7 +10,20 @@ from base.utils import (
     _parse_int,
     captcha_is_valid,
     get_client_ip,
+    work_directory_path,
 )
+
+
+class WorkDirectoryPathTest(TestCase):
+    def test_work_directory_path(self):
+        class DummyInstance:
+            customer = "acme_corp"
+
+        instance = DummyInstance()
+        filename = "logo.png"
+
+        result = work_directory_path(instance, filename)
+        self.assertEqual(result, "works/acme_corp/logo.png")
 
 
 class HealthCheckMiddlewareTest(TestCase):

@@ -56,24 +56,32 @@ class Work(models.Model):
     def __str__(self):
         return self.customer
 
-    def save(self, *args, **kwargs):
-        if self.snapshot and not getattr(self.snapshot, "_committed", True):
-            try:
-                # Accessing self.snapshot.file can raise FileNotFoundError if the file doesn't exist.
-                # Therefore we place this inside the try-except block.
-                if hasattr(self.snapshot, "file"):
-                    with Image.open(self.snapshot) as image:
-                        if image.height > 250 or image.width > 250:
-                            output = photo_resizer(image, 250)
-                            self.snapshot = InMemoryUploadedFile(
-                                output,
-                                "ImageField",
-                                "%s.jpg" % self.snapshot.name.split(".")[0],
-                                "image/jpeg",
-                                sys.getsizeof(output),
-                                None,
-                            )
-            except FileNotFoundError:
-                pass
+    def _resize_snapshot(self):
+        if not self.snapshot or getattr(self.snapshot, "_committed", True):
+            return
 
+        try:
+            # Accessing self.snapshot.file can raise FileNotFoundError if the file doesn't exist.
+            # Therefore we place this inside the try-except block.
+            if not hasattr(self.snapshot, "file"):
+                return
+
+            with Image.open(self.snapshot) as image:
+                if image.height <= 250 and image.width <= 250:
+                    return
+
+                output = photo_resizer(image, 250)
+                self.snapshot = InMemoryUploadedFile(
+                    output,
+                    "ImageField",
+                    "%s.jpg" % self.snapshot.name.split(".")[0],
+                    "image/jpeg",
+                    sys.getsizeof(output),
+                    None,
+                )
+        except FileNotFoundError:
+            pass
+
+    def save(self, *args, **kwargs):
+        self._resize_snapshot()
         return super().save(*args, **kwargs)

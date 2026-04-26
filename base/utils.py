@@ -78,7 +78,10 @@ def client_ip_key(group, request):
 def _parse_int(value: str | None) -> int | None:
     try:
         return int(value) if value not in (None, "") else None
-    except TypeError, ValueError:
+    except (
+        TypeError,
+        ValueError,
+    ):
         return None
 
 
