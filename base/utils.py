@@ -1,5 +1,6 @@
 import ipaddress
 import math
+import os
 import secrets
 from http import HTTPStatus
 from io import BytesIO
@@ -7,6 +8,7 @@ from io import BytesIO
 from django.conf import settings
 from django.http import JsonResponse
 from django.utils.deprecation import MiddlewareMixin
+from django.utils.text import slugify
 from PIL import Image, ImageOps
 
 CAPTCHA_SESSION_KEY = "contact_captcha_answer"
@@ -19,7 +21,9 @@ class HealthCheckMiddleware(MiddlewareMixin):
 
 
 def work_directory_path(instance, filename: str) -> str:
-    return "works/{0}/{1}".format(instance.customer, filename)
+    customer_slug = slugify(instance.customer) or "unknown"
+    safe_filename = os.path.basename(filename)
+    return "works/{0}/{1}".format(customer_slug, safe_filename)
 
 
 def photo_resizer(image: Image, size: int) -> BytesIO:
