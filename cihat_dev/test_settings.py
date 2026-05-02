@@ -1,10 +1,12 @@
 import os
 import secrets
+import shutil
 
 from django.db import models
 from django.db.models.expressions import Expression
+from django.test.runner import DiscoverRunner
 
-from cihat_dev.settings import *
+from cihat_dev.settings import *  # noqa
 
 SECRET_KEY = secrets.token_urlsafe(50)
 
@@ -80,9 +82,6 @@ STORAGES = {
     },
 }
 MEDIA_ROOT = BASE_DIR / "test_media/"
-
-import shutil
-from django.test.runner import DiscoverRunner
 
 
 class MediaCleanupTestRunner(DiscoverRunner):

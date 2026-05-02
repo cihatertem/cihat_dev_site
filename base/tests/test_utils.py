@@ -2,7 +2,8 @@ import ipaddress
 from http import HTTPStatus
 
 from django.http import JsonResponse
-from django.test import RequestFactory, TestCase, override_settings
+from django.test import RequestFactory, SimpleTestCase, TestCase, override_settings
+from PIL import Image
 
 from base.utils import (
     CAPTCHA_SESSION_KEY,
@@ -12,6 +13,7 @@ from base.utils import (
     captcha_is_valid,
     client_ip_key,
     get_client_ip,
+    photo_resizer,
     work_directory_path,
 )
 
@@ -223,3 +225,39 @@ class GenerateCaptchaTest(TestCase):
         # Assert the session contains the sum of the two numbers
         self.assertIn(CAPTCHA_SESSION_KEY, request.session)
         self.assertEqual(request.session[CAPTCHA_SESSION_KEY], num_one + num_two)
+
+
+class PhotoResizerTest(SimpleTestCase):
+    def test_photo_resizer_rgba_conversion(self):
+        # Create a dummy RGBA image
+        img = Image.new("RGBA", (200, 200), (255, 0, 0, 255))
+        output = photo_resizer(img, 100)
+
+        # Open the output image and verify it's JPEG (which implies RGB mode)
+        out_img = Image.open(output)
+        self.assertEqual(out_img.format, "JPEG")
+        self.assertEqual(out_img.mode, "RGB")
+        self.assertEqual(out_img.size, (100, 100))
+
+    def test_photo_resizer_p_conversion(self):
+        # Create a dummy P (palette) image
+        img = Image.new("P", (200, 200), 1)
+        output = photo_resizer(img, 100)
+
+        # Open the output image and verify it's JPEG
+        out_img = Image.open(output)
+        self.assertEqual(out_img.format, "JPEG")
+        self.assertEqual(out_img.mode, "RGB")
+        self.assertEqual(out_img.size, (100, 100))
+
+    def test_photo_resizer_resizes_image(self):
+        # Create a dummy RGB image with non-square dimensions
+        img = Image.new("RGB", (300, 200), (0, 255, 0))
+        output = photo_resizer(img, 100)
+
+        # The thumbnail method should maintain aspect ratio
+        out_img = Image.open(output)
+        self.assertEqual(out_img.format, "JPEG")
+        self.assertEqual(out_img.mode, "RGB")
+        # 300/200 -> 100/67 (rounding)
+        self.assertEqual(out_img.size, (100, 67))

@@ -57,3 +57,21 @@ class WorkModelTest(TestCase):
         )
         work.save()
         self.assertEqual(work.snapshot.name, "non_existent.jpg")
+
+    def test_resize_snapshot_catches_file_not_found(self):
+        work = Work(user=self.user, customer="Test Customer")
+
+        class MockSnapshot:
+            _committed = False
+            name = "test.jpg"
+
+            @property
+            def file(self):
+                raise FileNotFoundError("File not found")
+
+        work.snapshot = MockSnapshot()
+
+        try:
+            work._resize_snapshot()
+        except FileNotFoundError:
+            self.fail("_resize_snapshot() raised FileNotFoundError unexpectedly!")
