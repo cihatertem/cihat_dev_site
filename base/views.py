@@ -1,5 +1,5 @@
+import concurrent.futures
 import os
-import threading
 
 from django.contrib import messages
 from django.core.cache import cache
@@ -22,6 +22,8 @@ from .utils import (
 
 CONTACT_RATE_LIMIT = "2/m"
 CONTACT_RATE_LIMIT_KEY = "ip"
+
+email_executor = concurrent.futures.ThreadPoolExecutor(max_workers=5)
 
 
 @ratelimit(
@@ -95,9 +97,7 @@ def home_page(request):
                 reply_to=[email],
             )
 
-            threading.Thread(
-                target=email_message.send, kwargs={"fail_silently": False}
-            ).start()
+            email_executor.submit(email_message.send, fail_silently=False)
 
             messages.success(
                 request,
