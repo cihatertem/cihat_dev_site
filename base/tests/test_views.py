@@ -1,5 +1,6 @@
 import os
 import time
+from unittest.mock import patch
 
 from django.core import mail
 from django.core.cache import cache
@@ -74,6 +75,23 @@ class HomePageViewTests(TestCase):
             str(messages[0]), "Toplam alanı boş ya da hatalı. Lütfen tekrar deneyin."
         )
 
+    def test_home_page_post_invalid_form(self):
+        response = self.client.get(self.url)
+        captcha_answer = self.client.session.get(CAPTCHA_SESSION_KEY)
+
+        data = {
+            # Missing required fields like 'name', 'subject', 'email', 'body'
+            "captcha": str(captcha_answer),
+            "website": "",
+        }
+        response = self.client.post(self.url, data)
+        self.assertEqual(response.status_code, 200)
+        self.assertTemplateUsed(response, "base/home.html")
+        self.assertIn("skills", response.context)
+        self.assertIn("works", response.context)
+        self.assertIn("num1", response.context)
+        self.assertIn("num2", response.context)
+
     def test_home_page_post_success(self):
         response = self.client.get(self.url)
         captcha_answer = self.client.session.get(CAPTCHA_SESSION_KEY)
@@ -134,8 +152,6 @@ class HomePageViewTests(TestCase):
 
     @override_settings(RATELIMIT_ENABLE=True)
     def test_home_page_post_rate_limited(self):
-        # We need to simulate rate limiting
-        # django-ratelimit needs a REMOTE_ADDR
         ip = "127.0.0.1"
 
         response = self.client.get(self.url, REMOTE_ADDR=ip)
@@ -150,18 +166,21 @@ class HomePageViewTests(TestCase):
             "website": "",
         }
 
-        # 1st request
-        self.client.post(self.url, data, REMOTE_ADDR=ip)
+        # django-ratelimit uses fixed windows. Freeze its clock so this test
+        # cannot cross a window boundary between POST requests.
+        with patch("django_ratelimit.core.time.time", return_value=1_700_000_000):
+            # 1st request
+            self.client.post(self.url, data, REMOTE_ADDR=ip)
 
-        # 2nd request
-        self.client.get(self.url, REMOTE_ADDR=ip)
-        data["captcha"] = str(self.client.session.get(CAPTCHA_SESSION_KEY))
-        self.client.post(self.url, data, REMOTE_ADDR=ip)
+            # 2nd request
+            self.client.get(self.url, REMOTE_ADDR=ip)
+            data["captcha"] = str(self.client.session.get(CAPTCHA_SESSION_KEY))
+            self.client.post(self.url, data, REMOTE_ADDR=ip)
 
-        # 3rd request should hit the rate limit (2/m)
-        self.client.get(self.url, REMOTE_ADDR=ip)
-        data["captcha"] = str(self.client.session.get(CAPTCHA_SESSION_KEY))
-        response = self.client.post(self.url, data, REMOTE_ADDR=ip)
+            # 3rd request should hit the rate limit (2/m)
+            self.client.get(self.url, REMOTE_ADDR=ip)
+            data["captcha"] = str(self.client.session.get(CAPTCHA_SESSION_KEY))
+            response = self.client.post(self.url, data, REMOTE_ADDR=ip)
 
         self.assertRedirects(response, self.url)
 

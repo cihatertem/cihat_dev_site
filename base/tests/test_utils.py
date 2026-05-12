@@ -3,7 +3,7 @@ from http import HTTPStatus
 
 from django.http import JsonResponse
 from django.test import RequestFactory, SimpleTestCase, TestCase, override_settings
-from PIL import Image
+from PIL import ExifTags, Image
 
 from base.utils import (
     CAPTCHA_SESSION_KEY,
@@ -261,3 +261,32 @@ class PhotoResizerTest(SimpleTestCase):
         self.assertEqual(out_img.mode, "RGB")
         # 300/200 -> 100/67 (rounding)
         self.assertEqual(out_img.size, (100, 67))
+
+    def test_photo_resizer_exif_transpose(self):
+        # Create a dummy image
+        img = Image.new("RGB", (300, 200), (0, 0, 255))
+
+        # Get EXIF dict and set orientation to 6 (Rotated 90 degrees CCW)
+        exif = img.getexif()
+        orientation_tag = next(
+            (k for k, v in ExifTags.TAGS.items() if v == "Orientation"), None
+        )
+        if orientation_tag:
+            exif[orientation_tag] = 6
+
+        # Save image with EXIF to buffer, then read it back so PIL parses EXIF
+        from io import BytesIO
+
+        b = BytesIO()
+        img.save(b, format="JPEG", exif=exif)
+        b.seek(0)
+        img_with_exif = Image.open(b)
+
+        # Original is 300x200, resized to 100x67.
+        # Orientation 6 transposes the image, so output should be 67x100
+        output = photo_resizer(img_with_exif, 100)
+
+        out_img = Image.open(output)
+        self.assertEqual(out_img.format, "JPEG")
+        self.assertEqual(out_img.mode, "RGB")
+        self.assertEqual(out_img.size, (67, 100))
