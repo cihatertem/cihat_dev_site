@@ -6,15 +6,21 @@ from base.sitemaps import BaseSiteMap
 
 from .views import home_page
 
-app_name = 'base'
+app_name = "base"
 sitemaps = {
     "pages": BaseSiteMap,
 }
 
 urlpatterns = [
-    path('sitemap.xml', sitemap, {'sitemaps': sitemaps},
-         name='django.contrib.sitemaps.views.sitemap'),
-    path('robots.txt', TemplateView.as_view(template_name='robots.txt', content_type='text/plain')),
-    path('', home_page, name='home'),
+    path(
+        "sitemap.xml",
+        sitemap,
+        {"sitemaps": sitemaps},
+        name="django.contrib.sitemaps.views.sitemap",
+    ),
+    path(
+        "robots.txt",
+        TemplateView.as_view(template_name="robots.txt", content_type="text/plain"),
+    ),
+    path("", home_page, name="home"),
 ]
-

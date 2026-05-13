@@ -1,4 +1,3 @@
-import concurrent.futures
 import os
 
 from django.contrib import messages
@@ -38,8 +37,7 @@ def home_page(request):
     template = "base/home.html"
     user_email = os.getenv("EMAIL")
 
-    context = cache.get("home_context")
-    if not context:
+    def get_home_context():
         user = (
             User.objects.prefetch_related("skill_set", "work_set")
             .filter(email=user_email)
@@ -47,10 +45,9 @@ def home_page(request):
         )
         skills = list(user.skill_set.all()) if user else []
         works = list(user.work_set.all()) if user else []
-        context = {"skills": skills, "works": works}
-        cache.set("home_context", context, 60 * 15)
-    else:
-        context = context.copy()
+        return {"skills": skills, "works": works}
+
+    context = cache.get_or_set("home_context", get_home_context, 60 * 15).copy()
 
     if request.method == "POST":
         if getattr(request, "limited", False):

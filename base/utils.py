@@ -139,3 +139,41 @@ class BoundedExecutor:
 
     def shutdown(self, wait=True, *, cancel_futures=False):
         self.executor.shutdown(wait=wait, cancel_futures=cancel_futures)
+
+
+image_executor = BoundedExecutor(max_workers=2, max_queue=10)
+
+
+def resize_work_snapshot_task(work_id):
+    try:
+        from django.core.files.base import ContentFile
+        from PIL import Image
+
+        from base.models import Work
+
+        work = Work.objects.get(id=work_id)
+        if not work.snapshot:
+            return
+
+        try:
+            if not hasattr(work.snapshot, "file"):
+                return
+        except FileNotFoundError:
+            return
+
+        with Image.open(work.snapshot) as image:
+            if image.height <= 250 and image.width <= 250:
+                return
+
+            output = photo_resizer(image, 250)
+
+            old_name = work.snapshot.name
+            new_file_name = "%s.jpg" % work.snapshot.name.split("/")[-1].split(".")[0]
+
+            work.snapshot.save(new_file_name, ContentFile(output.read()), save=False)
+            work.save(update_fields=["snapshot"])
+
+            if work.snapshot.name != old_name:
+                work.snapshot.storage.delete(old_name)
+    except Exception as e:
+        logger.error(f"Error resizing work snapshot {work_id}: {e}")
