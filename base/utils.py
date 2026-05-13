@@ -1,6 +1,9 @@
+import concurrent.futures
 import ipaddress
+import logging
 import os
 import secrets
+import threading
 from http import HTTPStatus
 from io import BytesIO
 
@@ -80,7 +83,7 @@ def client_ip_key(group, request):
 
 def _parse_int(value: str | None) -> int | None:
     try:
-        return int(value) if value not in (None, "") else None
+        return int(value)
     except (
         TypeError,
         ValueError,
@@ -104,3 +107,35 @@ def _generate_captcha(request):
     num_two = secrets.randbelow(10) + 1
     request.session[CAPTCHA_SESSION_KEY] = num_one + num_two
     return num_one, num_two
+
+
+logger = logging.getLogger(__name__)
+
+
+class BoundedExecutor:
+    """
+    A ThreadPoolExecutor with a bounded queue.
+    Prevents memory exhaustion/DoS from unlimited task queuing.
+    """
+
+    def __init__(self, max_workers: int, max_queue: int):
+        self.executor = concurrent.futures.ThreadPoolExecutor(max_workers=max_workers)
+        self.semaphore = threading.Semaphore(max_workers + max_queue)
+
+    def submit(self, fn, *args, **kwargs):
+        if not self.semaphore.acquire(blocking=False):
+            logger.warning("BoundedExecutor queue full. Dropping task to prevent DoS.")
+            f = concurrent.futures.Future()
+            f.set_exception(RuntimeError("Task queue is full"))
+            return f
+
+        def release_and_run():
+            try:
+                return fn(*args, **kwargs)
+            finally:
+                self.semaphore.release()
+
+        return self.executor.submit(release_and_run)
+
+    def shutdown(self, wait=True, *, cancel_futures=False):
+        self.executor.shutdown(wait=wait, cancel_futures=cancel_futures)

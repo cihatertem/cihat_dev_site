@@ -11,7 +11,7 @@ services:
         delay: 10s
         failure_action: rollback
         monitor: 5s
-#        max_failure_ratio: 0.3
+      #        max_failure_ratio: 0.3
       labels:
         - "traefik.enable=true"
         # Routers
@@ -56,13 +56,13 @@ services:
     env_file:
       - ./environments/cihatdev_environment.txt
     environment:
-      SECRET_KEY: /run/secrets/cihatdev-secret-key
-      EMAIL_HOST_USER: /run/secrets/email-user
-      EMAIL_HOST_PASSWORD: /run/secrets/email-pass
-      POSTGRES_USER: /run/secrets/postgres-user
-      POSTGRES_PASSWORD: /run/secrets/postgres-pass
-      AWS_ACCESS_KEY_ID: /run/secrets/aws-cihat-consumer-access
-      AWS_SECRET_ACCESS_KEY: /run/secrets/aws-cihat-consumer-secret
+      SECRET_KEY_FILE: /run/secrets/cihatdev-secret-key
+      EMAIL_HOST_USER_FILE: /run/secrets/email-user
+      EMAIL_HOST_PASSWORD_FILE: /run/secrets/email-pass
+      POSTGRES_USER_FILE: /run/secrets/postgres-user
+      POSTGRES_PASSWORD_FILE: /run/secrets/postgres-pass
+      AWS_ACCESS_KEY_ID_FILE: /run/secrets/aws-cihat-consumer-access
+      AWS_SECRET_ACCESS_KEY_FILE: /run/secrets/aws-cihat-consumer-secret
     secrets:
       - cihatdev-secret-key
       - email-pass

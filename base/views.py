@@ -12,6 +12,7 @@ from .forms import ContactForm
 from .models import User
 from .utils import (
     CAPTCHA_SESSION_KEY,
+    BoundedExecutor,
     _generate_captcha,
     captcha_is_valid,
     client_ip_key,
@@ -23,7 +24,7 @@ from .utils import (
 CONTACT_RATE_LIMIT = "2/m"
 CONTACT_RATE_LIMIT_KEY = "ip"
 
-email_executor = concurrent.futures.ThreadPoolExecutor(max_workers=5)
+email_executor = BoundedExecutor(max_workers=5, max_queue=10)
 
 
 @ratelimit(

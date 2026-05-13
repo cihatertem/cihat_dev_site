@@ -18,10 +18,11 @@ from django.utils.csp import CSP
 
 
 def get_secret(key: str, default: str = "") -> str:
-    value = os.getenv(key, default)
-    if os.path.isfile(value):
-        with open(value) as f:
+    file_path = os.getenv(f"{key}_FILE")
+    if file_path and os.path.isfile(file_path):
+        with open(file_path) as f:
             return f.readline().strip("\n")
+    value = os.getenv(key, default)
     return value.strip("\n")
 
 
