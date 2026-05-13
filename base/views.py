@@ -3,7 +3,7 @@ import os
 from django.contrib import messages
 from django.core.cache import cache
 from django.core.mail import EmailMessage
-from django.shortcuts import redirect, render
+from django.shortcuts import get_object_or_404, redirect, render
 from django.views.decorators.http import require_http_methods
 from django_ratelimit.decorators import ratelimit
 
@@ -38,13 +38,11 @@ def home_page(request):
     user_email = os.getenv("EMAIL")
 
     def get_home_context():
-        user = (
-            User.objects.prefetch_related("skill_set", "work_set")
-            .filter(email=user_email)
-            .first()
+        user = get_object_or_404(
+            User.objects.prefetch_related("skill_set", "work_set"), email=user_email
         )
-        skills = list(user.skill_set.all()) if user else []
-        works = list(user.work_set.all()) if user else []
+        skills = list(user.skill_set.all())
+        works = list(user.work_set.all())
         return {"skills": skills, "works": works}
 
     context = cache.get_or_set("home_context", get_home_context, 60 * 15).copy()
