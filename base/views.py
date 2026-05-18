@@ -47,6 +47,7 @@ def home_page(request):
 
     context = cache.get_or_set("home_context", get_home_context, 60 * 15).copy()
 
+    form = ContactForm()
     if request.method == "POST":
         if getattr(request, "limited", False):
             messages.error(
@@ -105,5 +106,6 @@ def home_page(request):
     num_one, num_two = _generate_captcha(request)
     context["num1"] = num_one
     context["num2"] = num_two
+    context["form"] = form
 
     return render(request, template, context)

@@ -7,6 +7,7 @@ from PIL import ExifTags, Image
 
 from base.utils import (
     CAPTCHA_SESSION_KEY,
+    BoundedExecutor,
     HealthCheckMiddleware,
     _generate_captcha,
     _parse_int,
@@ -290,3 +291,13 @@ class PhotoResizerTest(SimpleTestCase):
         self.assertEqual(out_img.format, "JPEG")
         self.assertEqual(out_img.mode, "RGB")
         self.assertEqual(out_img.size, (67, 100))
+
+
+class BoundedExecutorTest(SimpleTestCase):
+    def test_bounded_executor_init(self):
+        max_workers = 3
+        max_queue = 5
+        executor = BoundedExecutor(max_workers=max_workers, max_queue=max_queue)
+
+        self.assertEqual(executor.executor._max_workers, max_workers)
+        self.assertEqual(executor.semaphore._value, max_workers + max_queue)

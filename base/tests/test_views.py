@@ -91,6 +91,9 @@ class HomePageViewTests(TestCase):
         self.assertIn("works", response.context)
         self.assertIn("num1", response.context)
         self.assertIn("num2", response.context)
+        self.assertIn("form", response.context)
+        self.assertTrue(response.context["form"].errors)
+        self.assertContains(response, "form-errors")
 
     def test_home_page_post_success(self):
         response = self.client.get(self.url)
