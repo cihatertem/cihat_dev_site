@@ -1,5 +1,6 @@
 import ipaddress
 from http import HTTPStatus
+from unittest.mock import MagicMock
 
 from django.http import JsonResponse
 from django.test import RequestFactory, SimpleTestCase, TestCase, override_settings
@@ -301,3 +302,21 @@ class BoundedExecutorTest(SimpleTestCase):
 
         self.assertEqual(executor.executor._max_workers, max_workers)
         self.assertEqual(executor.semaphore._value, max_workers + max_queue)
+
+    def test_bounded_executor_shutdown(self):
+        executor = BoundedExecutor(max_workers=2, max_queue=2)
+        executor.executor.shutdown = MagicMock()
+
+        # Test default parameters
+        executor.shutdown()
+        executor.executor.shutdown.assert_called_once_with(
+            wait=True, cancel_futures=False
+        )
+
+        executor.executor.shutdown.reset_mock()
+
+        # Test explicit parameters
+        executor.shutdown(wait=False, cancel_futures=True)
+        executor.executor.shutdown.assert_called_once_with(
+            wait=False, cancel_futures=True
+        )

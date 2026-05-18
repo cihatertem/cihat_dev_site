@@ -21,7 +21,6 @@ from .utils import (
 # Create your views here.
 
 CONTACT_RATE_LIMIT = "2/m"
-CONTACT_RATE_LIMIT_KEY = "ip"
 
 email_executor = BoundedExecutor(max_workers=5, max_queue=10)
 
@@ -41,8 +40,8 @@ def home_page(request):
         user = get_object_or_404(
             User.objects.prefetch_related("skill_set", "work_set"), email=user_email
         )
-        skills = list(user.skill_set.all())
-        works = list(user.work_set.all())
+        skills = user.skill_set.all()
+        works = user.work_set.all()
         return {"skills": skills, "works": works}
 
     context = cache.get_or_set("home_context", get_home_context, 60 * 15).copy()
