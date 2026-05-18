@@ -4,6 +4,7 @@ from unittest.mock import patch
 
 from django.core import mail
 from django.core.cache import cache
+from django.core.exceptions import ImproperlyConfigured
 from django.test import Client, TestCase, override_settings
 from django.urls import reverse
 
@@ -42,7 +43,7 @@ class HomePageViewTests(TestCase):
         if self.original_email is not None:
             os.environ["EMAIL"] = self.original_email
         else:
-            del os.environ["EMAIL"]
+            os.environ.pop("EMAIL", None)
         cache.clear()
 
     def test_home_page_get(self):
@@ -196,3 +197,11 @@ class HomePageViewTests(TestCase):
         # Should raise 404
         response = self.client.get(self.url)
         self.assertEqual(response.status_code, 404)
+
+    def test_home_page_missing_email_env_var(self):
+        # Unset EMAIL environment variable
+        if "EMAIL" in os.environ:
+            del os.environ["EMAIL"]
+
+        with self.assertRaises(ImproperlyConfigured):
+            self.client.get(self.url)

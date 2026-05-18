@@ -2,6 +2,7 @@ import os
 
 from django.contrib import messages
 from django.core.cache import cache
+from django.core.exceptions import ImproperlyConfigured
 from django.core.mail import EmailMessage
 from django.shortcuts import get_object_or_404, redirect, render
 from django.views.decorators.http import require_http_methods
@@ -35,6 +36,8 @@ email_executor = BoundedExecutor(max_workers=5, max_queue=10)
 def home_page(request):
     template = "base/home.html"
     user_email = os.getenv("EMAIL")
+    if not user_email:
+        raise ImproperlyConfigured("EMAIL environment variable is not set")
 
     def get_home_context():
         user = get_object_or_404(

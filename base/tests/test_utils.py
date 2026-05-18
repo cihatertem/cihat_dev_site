@@ -1,4 +1,5 @@
 import ipaddress
+import threading
 from http import HTTPStatus
 from unittest.mock import MagicMock
 
@@ -320,3 +321,27 @@ class BoundedExecutorTest(SimpleTestCase):
         executor.executor.shutdown.assert_called_once_with(
             wait=False, cancel_futures=True
         )
+
+    def test_bounded_executor_queue_full(self):
+        executor = BoundedExecutor(max_workers=1, max_queue=1)
+        event = threading.Event()
+
+        def blocking_task():
+            event.wait()
+            return True
+
+        # First task takes the worker
+        executor.submit(blocking_task)
+        # Second task fills the queue
+        executor.submit(blocking_task)
+
+        # Third task should fail immediately as the queue is full
+        f3 = executor.submit(blocking_task)
+
+        # Verify that the third task returns a Future with RuntimeError
+        with self.assertRaisesMessage(RuntimeError, "Task queue is full"):
+            f3.result()
+
+        # Cleanup
+        event.set()
+        executor.shutdown()
