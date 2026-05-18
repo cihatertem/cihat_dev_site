@@ -336,7 +336,14 @@ class BoundedExecutorTest(SimpleTestCase):
         executor.submit(blocking_task)
 
         # Third task should fail immediately as the queue is full
-        f3 = executor.submit(blocking_task)
+        with self.assertLogs("base.utils", level="WARNING") as logs:
+            f3 = executor.submit(blocking_task)
+
+        self.assertIn("Task queue is full", str(f3.exception()))
+        self.assertEqual(
+            logs.output,
+            ["WARNING:base.utils:BoundedExecutor queue full. Dropping task to prevent DoS."],
+        )
 
         # Verify that the third task returns a Future with RuntimeError
         with self.assertRaisesMessage(RuntimeError, "Task queue is full"):
