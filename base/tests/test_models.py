@@ -1,4 +1,5 @@
 from io import BytesIO
+from unittest import mock
 
 from django.core.files.uploadedfile import SimpleUploadedFile
 from django.test import TestCase
@@ -98,3 +99,19 @@ class WorkModelTest(TestCase):
                 self.fail(
                     "resize_work_snapshot_task raised FileNotFoundError unexpectedly!"
                 )
+
+    @mock.patch("base.utils.photo_resizer", side_effect=Exception("Test error"))
+    def test_resize_snapshot_catches_general_exception(self, mock_resizer):
+        large_image = self.generate_test_image(500, 300)
+        work = Work(user=self.user, customer="Test Customer", snapshot=large_image)
+        work.save()
+
+        with self.assertLogs("base.utils", level="ERROR") as cm:
+            resize_work_snapshot_task(work.id)
+
+        self.assertTrue(
+            any(
+                f"Error resizing work snapshot {work.id}: Test error" in msg
+                for msg in cm.output
+            )
+        )

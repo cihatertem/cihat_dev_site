@@ -322,6 +322,33 @@ class BoundedExecutorTest(SimpleTestCase):
             wait=False, cancel_futures=True
         )
 
+    def test_bounded_executor_submit_success(self):
+        executor = BoundedExecutor(max_workers=1, max_queue=1)
+
+        # Test successful path with args and kwargs
+        def task_function(x, y, z=0):
+            return x + y + z
+
+        future1 = executor.submit(task_function, 1, 2, z=3)
+        self.assertEqual(future1.result(), 6)
+
+        # Test exception handling in task
+        def failing_task():
+            raise ValueError("Test error")
+
+        future2 = executor.submit(failing_task)
+        with self.assertRaisesMessage(ValueError, "Test error"):
+            future2.result()
+
+        # Test that semaphore is correctly released by sequentially submitting tasks
+        # Capacity is max_workers(1) + max_queue(1) = 2.
+        # We submit 3 tasks sequentially (waiting for each to finish)
+        for i in range(3):
+            future = executor.submit(task_function, i, 1)
+            self.assertEqual(future.result(), i + 1)
+
+        executor.shutdown()
+
     def test_bounded_executor_queue_full(self):
         executor = BoundedExecutor(max_workers=1, max_queue=1)
         event = threading.Event()
@@ -342,7 +369,9 @@ class BoundedExecutorTest(SimpleTestCase):
         self.assertIn("Task queue is full", str(f3.exception()))
         self.assertEqual(
             logs.output,
-            ["WARNING:base.utils:BoundedExecutor queue full. Dropping task to prevent DoS."],
+            [
+                "WARNING:base.utils:BoundedExecutor queue full. Dropping task to prevent DoS."
+            ],
         )
 
         # Verify that the third task returns a Future with RuntimeError
