@@ -115,6 +115,21 @@ class WorkModelTest(TestCase):
                     "resize_work_snapshot_task raised FileNotFoundError unexpectedly!"
                 )
 
+    def test_resize_snapshot_invalid_id_logs_error(self):
+        import uuid
+
+        invalid_id = uuid.uuid4()
+        with self.assertLogs("base.utils", level="ERROR") as cm:
+            resize_work_snapshot_task(invalid_id)
+
+        self.assertTrue(
+            any(
+                f"Error resizing work snapshot {invalid_id}: Work matching query does not exist."
+                in msg
+                for msg in cm.output
+            )
+        )
+
     @mock.patch("base.utils.photo_resizer", side_effect=Exception("Test error"))
     def test_resize_snapshot_catches_general_exception(self, mock_resizer):
         large_image = self.generate_test_image(500, 300)
