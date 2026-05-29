@@ -1,4 +1,3 @@
-import os
 import secrets
 import shutil
 
@@ -48,9 +47,9 @@ class MockGinIndex(models.Index):
 
 
 try:
-    import django.contrib.postgres.indexes
+    from django.contrib.postgres import indexes
 
-    django.contrib.postgres.indexes.GinIndex = MockGinIndex
+    indexes.GinIndex = MockGinIndex
 except ImportError:
     pass
 
@@ -64,9 +63,9 @@ class MockSearchVector(Expression):
 
 
 try:
-    import django.contrib.postgres.search
+    from django.contrib.postgres import search
 
-    django.contrib.postgres.search.SearchVector = MockSearchVector
+    search.SearchVector = MockSearchVector
 except ImportError:
     pass
 

@@ -57,6 +57,21 @@ class WorkModelTest(TestCase):
         work.save()
         self.assertEqual(work.snapshot.name, "")
 
+    @mock.patch("base.models.transaction.on_commit")
+    def test_save_skips_resize_when_update_fields_excludes_snapshot(
+        self, mock_on_commit
+    ):
+        work = Work.objects.create(user=self.user, customer="Test Customer")
+        mock_on_commit.reset_mock()
+
+        large_image = self.generate_test_image(500, 300)
+        work.snapshot = large_image
+
+        work.customer = "Updated Customer"
+        work.save(update_fields=["customer"])
+
+        mock_on_commit.assert_not_called()
+
     def test_save_handles_default_image_not_found(self):
         work = Work(
             user=self.user,

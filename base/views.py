@@ -96,12 +96,17 @@ def home_page(request):
                 reply_to=[email],
             )
 
-            email_executor.submit(email_message.send, fail_silently=False)
-
-            messages.success(
-                request,
-                "Your message was sent successfully.\nWe will touch you back soon.",
-            )
+            future = email_executor.submit(email_message.send, fail_silently=False)
+            if future.done() and future.exception():
+                messages.error(
+                    request,
+                    "Our system is currently busy. Please try again later.",
+                )
+            else:
+                messages.success(
+                    request,
+                    "Your message was sent successfully.\nWe will touch you back soon.",
+                )
 
             return redirect("base:home")
 

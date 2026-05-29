@@ -106,6 +106,10 @@ class GetClientIpTest(TestCase):
             del request.META["REMOTE_ADDR"]
         self.assertIsNone(get_client_ip(request))
 
+    def test_invalid_remote_addr(self):
+        request = self.factory.get("/", REMOTE_ADDR="not_an_ip")
+        self.assertEqual(get_client_ip(request), "not_an_ip")
+
     def test_no_trusted_proxies(self):
         request = self.factory.get("/", REMOTE_ADDR="192.168.1.5")
         self.assertEqual(get_client_ip(request), "192.168.1.5")

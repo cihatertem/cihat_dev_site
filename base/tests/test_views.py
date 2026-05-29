@@ -96,6 +96,36 @@ class HomePageViewTests(TestCase):
         self.assertTrue(response.context["form"].errors)
         self.assertContains(response, "form-errors")
 
+    def test_home_page_post_queue_full(self):
+        response = self.client.get(self.url)
+        captcha_answer = self.client.session.get(CAPTCHA_SESSION_KEY)
+
+        data = {
+            "name": "Test Name",
+            "subject": "Test Subject",
+            "email": "sender@example.com",
+            "body": "Test Body",
+            "captcha": str(captcha_answer),
+            "website": "",
+        }
+
+        import concurrent.futures
+        from unittest.mock import patch
+
+        future = concurrent.futures.Future()
+        future.set_exception(RuntimeError("Task queue is full"))
+
+        with patch("base.views.email_executor.submit", return_value=future):
+            response = self.client.post(self.url, data)
+
+        self.assertRedirects(response, self.url)
+
+        messages = list(response.wsgi_request._messages)
+        self.assertEqual(len(messages), 1)
+        self.assertEqual(
+            str(messages[0]), "Our system is currently busy. Please try again later."
+        )
+
     def test_home_page_post_success(self):
         response = self.client.get(self.url)
         captcha_answer = self.client.session.get(CAPTCHA_SESSION_KEY)
