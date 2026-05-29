@@ -39,15 +39,16 @@ def home_page(request):
     if not user_email:
         raise ImproperlyConfigured("EMAIL environment variable is not set")
 
-    def get_home_context():
+    def get_home_data():
         user = get_object_or_404(
             User.objects.prefetch_related("skill_set", "work_set"), email=user_email
         )
         skills = user.skill_set.all()
         works = user.work_set.all()
-        return {"skills": skills, "works": works}
+        return skills, works
 
-    context = cache.get_or_set("home_context", get_home_context, 60 * 15).copy()
+    skills, works = cache.get_or_set("home_data", get_home_data, 60 * 15)
+    context = {"skills": skills, "works": works}
 
     form = ContactForm()
     if request.method == "POST":

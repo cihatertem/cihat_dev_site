@@ -1,4 +1,5 @@
 import concurrent.futures
+import functools
 import ipaddress
 import logging
 import os
@@ -39,6 +40,15 @@ def photo_resizer(image: Image, size: int) -> BytesIO:
     return output
 
 
+@functools.lru_cache(maxsize=1024)
+def _is_ip_trusted(ip_str: str, trusted_nets_tuple: tuple) -> bool | None:
+    try:
+        ip_obj = ipaddress.ip_address(ip_str)
+    except ValueError:
+        return None
+    return any(ip_obj in net for net in trusted_nets_tuple)
+
+
 def get_client_ip(request) -> str | None:
     remote = request.META.get("REMOTE_ADDR")
     if not remote:
@@ -55,23 +65,21 @@ def get_client_ip(request) -> str | None:
     if trusted_nets and any(ra in net for net in trusted_nets):
         xff = request.META.get("HTTP_X_FORWARDED_FOR")
         if xff:
-            ips = [ip.strip() for ip in xff.split(",")]
+            trusted_nets_tuple = tuple(trusted_nets)
+            ips = xff.split(",")
             # Sağdan sola (en son proxy'den istemciye doğru) ilerle
-            for ip_str in reversed(ips):
-                try:
-                    ip_obj = ipaddress.ip_address(ip_str)
-                except ValueError:
+            for ip_raw in reversed(ips):
+                ip_str = ip_raw.strip()
+                trusted = _is_ip_trusted(ip_str, trusted_nets_tuple)
+                if trusted is None:
                     # Geçersiz IP formatı - güvenilmez kabul et
                     return "unknown"
-
-                # Eğer bu IP trusted ağlardan birindeyse, önceki IP'ye geçmeye devam et.
-                # Değilse, bulduğumuz ilk untrusted IP gerçek istemcidir.
-                is_trusted = any(ip_obj in net for net in trusted_nets)
-                if not is_trusted:
+                if not trusted:
+                    # Değilse, bulduğumuz ilk untrusted IP gerçek istemcidir.
                     return ip_str
 
             # Tüm IP'ler trusted ise, en soldakini dönebiliriz.
-            return ips[0]
+            return ips[0].strip()
 
     return remote
 
