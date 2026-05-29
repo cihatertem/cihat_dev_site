@@ -1,3 +1,4 @@
+import bisect
 import concurrent.futures
 import functools
 import ipaddress
@@ -40,13 +41,59 @@ def photo_resizer(image: Image, size: int) -> BytesIO:
     return output
 
 
+class IPRangeChecker:
+    __slots__ = ["v4_ranges", "v6_ranges", "original_nets"]
+
+    def __init__(self, networks: tuple):
+        self.v4_ranges = []
+        self.v6_ranges = []
+        self.original_nets = networks
+
+        collapsed_networks = list(ipaddress.collapse_addresses(networks))
+
+        for net in collapsed_networks:
+            if net.version == 4:
+                self.v4_ranges.append(
+                    (int(net.network_address), int(net.broadcast_address))
+                )
+            else:
+                self.v6_ranges.append(
+                    (int(net.network_address), int(net.broadcast_address))
+                )
+
+        self.v4_ranges.sort()
+        self.v6_ranges.sort()
+
+    def __contains__(self, ip: ipaddress.IPv4Address | ipaddress.IPv6Address) -> bool:
+        ip_int = int(ip)
+        ranges = self.v4_ranges if ip.version == 4 else self.v6_ranges
+
+        if not ranges:
+            return False
+
+        idx = bisect.bisect_right(ranges, (ip_int, float("inf"))) - 1
+
+        if idx >= 0:
+            net_start, net_end = ranges[idx]
+            if net_start <= ip_int <= net_end:
+                return True
+
+        return False
+
+
+@functools.lru_cache(maxsize=1)
+def _get_ip_range_checker(trusted_nets_tuple: tuple) -> IPRangeChecker:
+    return IPRangeChecker(trusted_nets_tuple)
+
+
 @functools.lru_cache(maxsize=1024)
 def _is_ip_trusted(ip_str: str, trusted_nets_tuple: tuple) -> bool | None:
     try:
         ip_obj = ipaddress.ip_address(ip_str)
     except ValueError:
         return None
-    return any(ip_obj in net for net in trusted_nets_tuple)
+    checker = _get_ip_range_checker(trusted_nets_tuple)
+    return ip_obj in checker
 
 
 def get_client_ip(request) -> str | None:
@@ -61,25 +108,28 @@ def get_client_ip(request) -> str | None:
 
     trusted_nets = getattr(settings, "TRUSTED_PROXY_NETS", None) or []
 
-    # Sadece trusted proxy'den geliyorsa XFF'i parse et
-    if trusted_nets and any(ra in net for net in trusted_nets):
-        xff = request.META.get("HTTP_X_FORWARDED_FOR")
-        if xff:
-            trusted_nets_tuple = tuple(trusted_nets)
-            ips = xff.split(",")
-            # Sağdan sola (en son proxy'den istemciye doğru) ilerle
-            for ip_raw in reversed(ips):
-                ip_str = ip_raw.strip()
-                trusted = _is_ip_trusted(ip_str, trusted_nets_tuple)
-                if trusted is None:
-                    # Geçersiz IP formatı - güvenilmez kabul et
-                    return "unknown"
-                if not trusted:
-                    # Değilse, bulduğumuz ilk untrusted IP gerçek istemcidir.
-                    return ip_str
+    if trusted_nets:
+        trusted_nets_tuple = tuple(trusted_nets)
+        checker = _get_ip_range_checker(trusted_nets_tuple)
 
-            # Tüm IP'ler trusted ise, en soldakini dönebiliriz.
-            return ips[0].strip()
+        # Sadece trusted proxy'den geliyorsa XFF'i parse et
+        if ra in checker:
+            xff = request.META.get("HTTP_X_FORWARDED_FOR")
+            if xff:
+                ips = xff.split(",")
+                # Sağdan sola (en son proxy'den istemciye doğru) ilerle
+                for ip_raw in reversed(ips):
+                    ip_str = ip_raw.strip()
+                    trusted = _is_ip_trusted(ip_str, trusted_nets_tuple)
+                    if trusted is None:
+                        # Geçersiz IP formatı - güvenilmez kabul et
+                        return "unknown"
+                    if not trusted:
+                        # Değilse, bulduğumuz ilk untrusted IP gerçek istemcidir.
+                        return ip_str
+
+                # Tüm IP'ler trusted ise, en soldakini dönebiliriz.
+                return ips[0].strip()
 
     return remote
 
