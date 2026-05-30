@@ -91,7 +91,7 @@ COPY . .
 RUN mkdir -p /app/staticfiles /app/media \
     && chown -R app:app /app
 
-RUN python manage.py collectstatic --noinput
+
 
 USER app
 
