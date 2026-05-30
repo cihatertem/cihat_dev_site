@@ -99,6 +99,23 @@ def _is_ip_trusted(ip_str: str, trusted_nets_tuple: tuple) -> bool | None:
     return ip_obj in checker
 
 
+def _parse_x_forwarded_for(xff: str, trusted_nets_tuple: tuple) -> str:
+    ips = xff.split(",")
+    # Sağdan sola (en son proxy'den istemciye doğru) ilerle
+    for ip_raw in reversed(ips):
+        ip_str = ip_raw.strip()
+        trusted = _is_ip_trusted(ip_str, trusted_nets_tuple)
+        if trusted is None:
+            # Geçersiz IP formatı - güvenilmez kabul et
+            return "unknown"
+        if not trusted:
+            # Değilse, bulduğumuz ilk untrusted IP gerçek istemcidir.
+            return ip_str
+
+    # Tüm IP'ler trusted ise, en soldakini dönebiliriz.
+    return ips[0].strip()
+
+
 def get_client_ip(request) -> str | None:
     remote = request.META.get("REMOTE_ADDR")
     if not remote:
@@ -119,20 +136,7 @@ def get_client_ip(request) -> str | None:
         if ra in checker:
             xff = request.META.get("HTTP_X_FORWARDED_FOR")
             if xff:
-                ips = xff.split(",")
-                # Sağdan sola (en son proxy'den istemciye doğru) ilerle
-                for ip_raw in reversed(ips):
-                    ip_str = ip_raw.strip()
-                    trusted = _is_ip_trusted(ip_str, trusted_nets_tuple)
-                    if trusted is None:
-                        # Geçersiz IP formatı - güvenilmez kabul et
-                        return "unknown"
-                    if not trusted:
-                        # Değilse, bulduğumuz ilk untrusted IP gerçek istemcidir.
-                        return ip_str
-
-                # Tüm IP'ler trusted ise, en soldakini dönebiliriz.
-                return ips[0].strip()
+                return _parse_x_forwarded_for(xff, trusted_nets_tuple)
 
     return remote
 

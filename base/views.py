@@ -85,6 +85,18 @@ def _process_contact_post(request, user_email):
     return form
 
 
+def _get_cached_home_data(user_email):
+    def get_home_data():
+        user = get_object_or_404(
+            User.objects.prefetch_related("skill_set", "work_set"), email=user_email
+        )
+        skills = user.skill_set.all()
+        works = user.work_set.all()
+        return skills, works
+
+    return cache.get_or_set("home_data", get_home_data, 60 * 15)
+
+
 @ratelimit(
     key=client_ip_key,
     rate=settings.CONTACT_RATE_LIMIT,
@@ -98,15 +110,7 @@ def home_page(request):
     if not user_email:
         raise ImproperlyConfigured("EMAIL environment variable is not set")
 
-    def get_home_data():
-        user = get_object_or_404(
-            User.objects.prefetch_related("skill_set", "work_set"), email=user_email
-        )
-        skills = user.skill_set.all()
-        works = user.work_set.all()
-        return skills, works
-
-    skills, works = cache.get_or_set("home_data", get_home_data, 60 * 15)
+    skills, works = _get_cached_home_data(user_email)
     context = {"skills": skills, "works": works}
 
     form = ContactForm()

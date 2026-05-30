@@ -11,19 +11,27 @@ https://docs.djangoproject.com/en/4.0/ref/settings/
 """
 
 import ipaddress
-import os
 from pathlib import Path
 
+import environ
 from django.utils.csp import CSP
+from environ.fileaware_mapping import FileAwareMapping
 
 
-def get_secret(key: str, default: str = "") -> str:
-    file_path = os.getenv(f"{key}_FILE")
-    if file_path and os.path.isfile(file_path):
-        with open(file_path) as f:
-            return f.readline().strip("\n")
-    value = os.getenv(key, default)
-    return value.strip("\n")
+class StripEnv(environ.Env):
+    def get_value(
+        self, var, cast=None, default=environ.Env.NOTSET, parse_default=False
+    ):
+        val = super().get_value(
+            var, cast=cast, default=default, parse_default=parse_default
+        )
+        if isinstance(val, str):
+            return val.strip("\n")
+        return val
+
+
+env = StripEnv()
+env.ENVIRON = FileAwareMapping()
 
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
@@ -33,14 +41,14 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 # See https://docs.djangoproject.com/en/4.0/howto/deployment/checklist/
 
 # SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY = get_secret("SECRET_KEY")
+SECRET_KEY = env.str("SECRET_KEY")
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = bool(int(os.environ.get("DEBUG", "0")))
+DEBUG = env.bool("DEBUG", False)
 
-ALLOWED_HOSTS = ["*"] if DEBUG else os.getenv("DJANGO_ALLOWED_HOSTS", "").split(",")
+ALLOWED_HOSTS = ["*"] if DEBUG else env.list("DJANGO_ALLOWED_HOSTS", default=[])
 
-ADMIN_ADDRESS = os.getenv("ADMIN_ADDRESS", "admin/")
+ADMIN_ADDRESS = env.str("ADMIN_ADDRESS", "admin/")
 
 # Application definition
 
@@ -124,8 +132,6 @@ TIME_ZONE = "Europe/Istanbul"
 
 USE_I18N = True
 
-USE_TZ = True
-
 # Static files (CSS, JavaScript, Images)
 # https://docs.djangoproject.com/en/4.0/howto/static-files/
 
@@ -148,31 +154,29 @@ AUTH_USER_MODEL = "base.User"
 
 # Email backend and settings
 EMAIL_BACKEND = "django.core.mail.backends.smtp.EmailBackend"
-EMAIL_HOST = os.getenv("EMAIL_HOST")
+EMAIL_HOST = env.str("EMAIL_HOST", "")
 EMAIL_PORT = 587
 EMAIL_USE_TLS = True
-EMAIL_HOST_USER = get_secret("EMAIL_HOST_USER")
-EMAIL_HOST_PASSWORD = get_secret("EMAIL_HOST_PASSWORD")
+EMAIL_HOST_USER = env.str("EMAIL_HOST_USER", "")
+EMAIL_HOST_PASSWORD = env.str("EMAIL_HOST_PASSWORD", "")
 
 # Database
 # https://docs.djangoproject.com/en/4.0/ref/settings/#databases
-USE_PGBOUNCER = os.getenv("USE_PGBOUNCER", "0") == "1"
-DB_KEEPALIVES_IDLE = int(os.getenv("DB_KEEPALIVES_IDLE", "60"))
-DB_KEEPALIVES_INTERVAL = int(os.getenv("DB_KEEPALIVES_INTERVAL", "10"))
-DB_KEEPALIVES_COUNT = int(os.getenv("DB_KEEPALIVES_COUNT", "3"))
+USE_PGBOUNCER = env.bool("USE_PGBOUNCER", False)
+DB_KEEPALIVES_IDLE = env.int("DB_KEEPALIVES_IDLE", 60)
+DB_KEEPALIVES_INTERVAL = env.int("DB_KEEPALIVES_INTERVAL", 10)
+DB_KEEPALIVES_COUNT = env.int("DB_KEEPALIVES_COUNT", 3)
 
 
 DATABASES = {
     "default": {
         "ENGINE": "django.db.backends.postgresql",
-        "NAME": os.getenv("POSTGRES_DB_CIHAT"),
-        "USER": get_secret("POSTGRES_USER"),
-        "PASSWORD": get_secret("POSTGRES_PASSWORD"),
-        "HOST": os.getenv("DB_HOST", "pgbouncer"),
-        "PORT": os.getenv("POSTGRES_PORT", "6432" if USE_PGBOUNCER else "5432"),
-        "CONN_MAX_AGE": int(
-            os.getenv("DJANGO_DB_CONN_MAX_AGE", "0" if USE_PGBOUNCER else "60")
-        ),
+        "NAME": env.str("POSTGRES_DB_CIHAT", ""),
+        "USER": env.str("POSTGRES_USER", ""),
+        "PASSWORD": env.str("POSTGRES_PASSWORD", ""),
+        "HOST": env.str("DB_HOST", "pgbouncer"),
+        "PORT": env.str("POSTGRES_PORT", "6432" if USE_PGBOUNCER else "5432"),
+        "CONN_MAX_AGE": env.int("DJANGO_DB_CONN_MAX_AGE", 0 if USE_PGBOUNCER else 60),
         "CONN_HEALTH_CHECKS": True,
         "DISABLE_SERVER_SIDE_CURSORS": USE_PGBOUNCER,
         "OPTIONS": {
@@ -184,10 +188,10 @@ DATABASES = {
         },
     }
 }
-USE_S3 = (not DEBUG) and bool(os.getenv("CIHAT_BUCKET_NAME"))
+USE_S3 = (not DEBUG) and bool(env.str("CIHAT_BUCKET_NAME", ""))
 
 if USE_S3:
-    AWS_S3_CUSTOM_DOMAIN = os.getenv("AWS_S3_CUSTOM_DOMAIN", "static.cihatertem.dev")
+    AWS_S3_CUSTOM_DOMAIN = env.str("AWS_S3_CUSTOM_DOMAIN", "static.cihatertem.dev")
     STORAGES = {
         "default": {
             "BACKEND": "storages.backends.s3.S3Storage",
@@ -208,12 +212,12 @@ if USE_S3:
         },
     }
 
-    AWS_ACCESS_KEY_ID = get_secret("AWS_ACCESS_KEY_ID")
-    AWS_SECRET_ACCESS_KEY = get_secret("AWS_SECRET_ACCESS_KEY")
-    AWS_STORAGE_BUCKET_NAME = os.getenv("CIHAT_BUCKET_NAME")
+    AWS_ACCESS_KEY_ID = env.str("AWS_ACCESS_KEY_ID", "")
+    AWS_SECRET_ACCESS_KEY = env.str("AWS_SECRET_ACCESS_KEY", "")
+    AWS_STORAGE_BUCKET_NAME = env.str("CIHAT_BUCKET_NAME", "")
     AWS_QUERYSTRING_AUTH = False
-    AWS_S3_REGION_NAME = os.getenv("AWS_S3_REGION_NAME")
-    if endpoint_url := os.getenv("AWS_S3_ENDPOINT_URL"):
+    AWS_S3_REGION_NAME = env.str("AWS_S3_REGION_NAME", "")
+    if endpoint_url := env.str("AWS_S3_ENDPOINT_URL", ""):
         AWS_S3_ENDPOINT_URL = endpoint_url
     MEDIA_ROOT = None
 else:
@@ -228,15 +232,13 @@ CACHES = {
 }
 
 RATELIMIT_USE_CACHE = "default"
-CONTACT_RATE_LIMIT = os.getenv("CONTACT_RATE_LIMIT", "2/m")
+CONTACT_RATE_LIMIT = env.str("CONTACT_RATE_LIMIT", "2/m")
 
 if not DEBUG:
-    _raw = os.getenv("TRUSTED_PROXY_NETS", "")
+    _raw = env.str("TRUSTED_PROXY_NETS", "")
     TRUSTED_PROXY_NETS = []
 
-    USE_TRAEFIK_SECURITY_HEADERS = (
-        os.getenv("DJANGO_USE_TRAEFIK_SECURITY_HEADERS", "1") == "1"
-    )
+    USE_TRAEFIK_SECURITY_HEADERS = env.bool("DJANGO_USE_TRAEFIK_SECURITY_HEADERS", True)
 
     if _raw:
         for net in _raw.split(","):
@@ -244,12 +246,12 @@ if not DEBUG:
 
     CSRF_COOKIE_SECURE = True
     CSRF_COOKIE_HTTPONLY = True
-    CSRF_COOKIE_SAMESITE = os.getenv("DJANGO_CSRF_COOKIE_SAMESITE", "Lax")
+    CSRF_COOKIE_SAMESITE = env.str("DJANGO_CSRF_COOKIE_SAMESITE", "Lax")
     CSRF_TRUSTED_ORIGINS = [
         f"https://{host}" for host in ALLOWED_HOSTS
     ]  # e.g. ["https://example.com"]
     SESSION_COOKIE_SECURE = True
-    SESSION_COOKIE_SAMESITE = os.getenv("DJANGO_SESSION_COOKIE_SAMESITE", "Lax")
+    SESSION_COOKIE_SAMESITE = env.str("DJANGO_SESSION_COOKIE_SAMESITE", "Lax")
     SECURE_SSL_REDIRECT = True
     SECURE_PROXY_SSL_HEADER = ("HTTP_X_FORWARDED_PROTO", "https")
     SESSION_COOKIE_HTTPONLY = True
@@ -262,11 +264,11 @@ if not DEBUG:
         SECURE_HSTS_INCLUDE_SUBDOMAINS = False
         SECURE_HSTS_PRELOAD = False
     else:
-        SECURE_HSTS_SECONDS = int(os.getenv("DJANGO_SECURE_HSTS_SECONDS", "31536000"))
-        SECURE_HSTS_INCLUDE_SUBDOMAINS = (
-            os.getenv("DJANGO_SECURE_HSTS_INCLUDE_SUBDOMAINS", "1") == "1"
+        SECURE_HSTS_SECONDS = env.int("DJANGO_SECURE_HSTS_SECONDS", 31536000)
+        SECURE_HSTS_INCLUDE_SUBDOMAINS = env.bool(
+            "DJANGO_SECURE_HSTS_INCLUDE_SUBDOMAINS", True
         )
-        SECURE_HSTS_PRELOAD = os.getenv("DJANGO_SECURE_HSTS_PRELOAD", "1") == "1"
+        SECURE_HSTS_PRELOAD = env.bool("DJANGO_SECURE_HSTS_PRELOAD", True)
 SECURE_CSP = {
     "default-src": [CSP.SELF],
     "script-src": [
