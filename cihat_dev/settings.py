@@ -40,6 +40,8 @@ DEBUG = bool(int(os.environ.get("DEBUG", "0")))
 
 ALLOWED_HOSTS = ["*"] if DEBUG else os.getenv("DJANGO_ALLOWED_HOSTS", "").split(",")
 
+ADMIN_ADDRESS = os.getenv("ADMIN_ADDRESS", "admin/")
+
 # Application definition
 
 INSTALLED_APPS = [
@@ -226,6 +228,7 @@ CACHES = {
 }
 
 RATELIMIT_USE_CACHE = "default"
+CONTACT_RATE_LIMIT = os.getenv("CONTACT_RATE_LIMIT", "2/m")
 
 if not DEBUG:
     _raw = os.getenv("TRUSTED_PROXY_NETS", "")
@@ -248,7 +251,6 @@ if not DEBUG:
     SESSION_COOKIE_SECURE = True
     SESSION_COOKIE_SAMESITE = os.getenv("DJANGO_SESSION_COOKIE_SAMESITE", "Lax")
     SECURE_SSL_REDIRECT = True
-    USE_X_FORWARDED_HOST = True
     SECURE_PROXY_SSL_HEADER = ("HTTP_X_FORWARDED_PROTO", "https")
     SESSION_COOKIE_HTTPONLY = True
     SECURE_CONTENT_TYPE_NOSNIFF = True

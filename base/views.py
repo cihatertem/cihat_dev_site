@@ -1,5 +1,6 @@
 import os
 
+from django.conf import settings
 from django.contrib import messages
 from django.core.cache import cache
 from django.core.exceptions import ImproperlyConfigured
@@ -20,8 +21,6 @@ from .utils import (
 )
 
 # Create your views here.
-
-CONTACT_RATE_LIMIT = "2/m"
 
 email_executor = BoundedExecutor(max_workers=5, max_queue=10)
 
@@ -88,7 +87,7 @@ def _process_contact_post(request, user_email):
 
 @ratelimit(
     key=client_ip_key,
-    rate=CONTACT_RATE_LIMIT,
+    rate=settings.CONTACT_RATE_LIMIT,
     block=False,
     method=["POST"],
 )

@@ -11,17 +11,20 @@ from io import BytesIO
 
 from django.conf import settings
 from django.http import JsonResponse
-from django.utils.deprecation import MiddlewareMixin
 from django.utils.text import slugify
 from PIL import Image, ImageOps
 
 CAPTCHA_SESSION_KEY = "contact_captcha_answer"
 
 
-class HealthCheckMiddleware(MiddlewareMixin):
-    def process_request(self, request):
+class HealthCheckMiddleware:
+    def __init__(self, get_response):
+        self.get_response = get_response
+
+    def __call__(self, request):
         if request.META["PATH_INFO"] == "/ping":
             return JsonResponse({"response": "pong!"}, status=HTTPStatus.OK)
+        return self.get_response(request)
 
 
 def work_directory_path(instance, filename: str) -> str:

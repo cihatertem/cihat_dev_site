@@ -2,6 +2,8 @@ import ipaddress
 
 from django.conf import settings
 
+from base.utils import _get_ip_range_checker
+
 
 class TrustedProxyMiddleware:
     def __init__(self, get_response):
@@ -30,4 +32,6 @@ class TrustedProxyMiddleware:
         except ValueError:
             return False
 
-        return any(address in net for net in trusted_nets)
+        trusted_nets_tuple = tuple(trusted_nets)
+        checker = _get_ip_range_checker(trusted_nets_tuple)
+        return address in checker
