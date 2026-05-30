@@ -3,13 +3,13 @@ services:
     image: postgres:18
     init: true
     environment:
-      POSTGRES_DB: ${POSTGRES_DB}
+      POSTGRES_DB: ${POSTGRES_DB_CIHAT}
       POSTGRES_USER: ${POSTGRES_USER}
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
     volumes:
       - cihat-data:/var/lib/postgresql
     healthcheck:
-      test: [ "CMD-SHELL", "pg_isready -U ${POSTGRES_USER} -d ${POSTGRES_DB}" ]
+      test: [ "CMD-SHELL", "pg_isready -U ${POSTGRES_USER} -d ${POSTGRES_DB_CIHAT}" ]
       interval: 5s
       timeout: 5s
       retries: 5
@@ -23,6 +23,7 @@ services:
       - .env
     environment:
       DB_HOST: db
+      POSTGRES_DB_CIHAT: ${POSTGRES_DB_CIHAT}
     depends_on:
       db:
         condition: service_healthy

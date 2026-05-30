@@ -45,42 +45,27 @@ def photo_resizer(image: Image, size: int) -> BytesIO:
 
 
 class IPRangeChecker:
-    __slots__ = ["v4_ranges", "v6_ranges", "original_nets"]
+    __slots__ = ["v4_nets", "v6_nets", "original_nets"]
 
     def __init__(self, networks: tuple):
-        self.v4_ranges = []
-        self.v6_ranges = []
         self.original_nets = networks
+        self.v4_nets = []
+        self.v6_nets = []
 
-        collapsed_networks = list(ipaddress.collapse_addresses(networks))
-
-        for net in collapsed_networks:
+        for net in ipaddress.collapse_addresses(networks):
             if net.version == 4:
-                self.v4_ranges.append(
-                    (int(net.network_address), int(net.broadcast_address))
-                )
+                self.v4_nets.append(net)
             else:
-                self.v6_ranges.append(
-                    (int(net.network_address), int(net.broadcast_address))
-                )
-
-        self.v4_ranges.sort()
-        self.v6_ranges.sort()
+                self.v6_nets.append(net)
 
     def __contains__(self, ip: ipaddress.IPv4Address | ipaddress.IPv6Address) -> bool:
-        ip_int = int(ip)
-        ranges = self.v4_ranges if ip.version == 4 else self.v6_ranges
-
-        if not ranges:
+        nets = self.v4_nets if ip.version == 4 else self.v6_nets
+        if not nets:
             return False
 
-        idx = bisect.bisect_right(ranges, (ip_int, float("inf"))) - 1
-
-        if idx >= 0:
-            net_start, net_end = ranges[idx]
-            if net_start <= ip_int <= net_end:
-                return True
-
+        idx = bisect.bisect_right(nets, ip, key=lambda net: net.network_address) - 1
+        if idx >= 0 and ip in nets[idx]:
+            return True
         return False
 
 
