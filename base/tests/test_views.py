@@ -1,6 +1,6 @@
 import os
 import time
-from unittest.mock import patch
+from unittest.mock import MagicMock, patch
 
 from django.core import mail
 from django.core.cache import cache
@@ -10,6 +10,7 @@ from django.urls import reverse
 
 from base.models import Skill, User, Work
 from base.utils import CAPTCHA_SESSION_KEY
+from base.views import _get_cached_home_data
 
 
 class HomePageViewTests(TestCase):
@@ -235,3 +236,37 @@ class HomePageViewTests(TestCase):
 
         with self.assertRaises(ImproperlyConfigured):
             self.client.get(self.url)
+
+    def test_get_cached_home_data(self):
+        cache.clear()
+
+        with patch("base.views.get_object_or_404") as mock_get_404:
+            mock_get_404.return_value = self.user
+
+            with patch("base.views.User.objects.prefetch_related") as mock_prefetch:
+                mock_qs = MagicMock()
+                mock_prefetch.return_value = mock_qs
+
+                # 1. Cache Miss
+                skills, works = _get_cached_home_data(self.test_email)
+
+                mock_prefetch.assert_called_once_with("skill_set", "work_set")
+                mock_get_404.assert_called_once_with(mock_qs, email=self.test_email)
+
+                self.assertEqual(len(skills), 1)
+                self.assertEqual(skills[0].skill, "Python")
+                self.assertEqual(len(works), 1)
+                self.assertEqual(works[0].customer, "Test Customer")
+
+                # Reset mocks
+                mock_prefetch.reset_mock()
+                mock_get_404.reset_mock()
+
+                # 2. Cache Hit
+                skills2, works2 = _get_cached_home_data(self.test_email)
+
+                mock_prefetch.assert_not_called()
+                mock_get_404.assert_not_called()
+
+                self.assertEqual(skills, skills2)
+                self.assertEqual(works, works2)

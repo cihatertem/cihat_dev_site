@@ -5,8 +5,14 @@ from django.core.files.uploadedfile import SimpleUploadedFile
 from django.test import TestCase
 from PIL import Image
 
-from base.models import User, Work
+from base.models import Skill, User, Work
 from base.utils import resize_work_snapshot_task
+
+
+class SkillModelTest(TestCase):
+    def test_str_representation(self):
+        skill = Skill(skill="Python")
+        self.assertEqual(str(skill), "Python")
 
 
 class WorkModelTest(TestCase):

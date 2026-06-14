@@ -55,34 +55,41 @@ def _process_contact_post(request, user_email):
 
         ip_address = get_client_ip(request)
 
-        email_message = EmailMessage(
-            subject,
-            f"""
+        return _send_contact_email(
+            request, name, subject, email, body, user_email, ip_address
+        )
+
+    return form
+
+
+def _send_contact_email(request, name, subject, email, body, user_email, ip_address):
+    """Helper function to create and send the contact email."""
+    email_message = EmailMessage(
+        subject,
+        f"""
         From {name}, {email}, {ip_address},\n
         Subject {subject},\n
         {body}\n
         Site: www.cihatertem.dev
         """,
-            user_email,
-            [user_email],
-            reply_to=[email],
+        user_email,
+        [user_email],
+        reply_to=[email],
+    )
+
+    future = email_executor.submit(email_message.send, fail_silently=False)
+    if future.done() and future.exception():
+        messages.error(
+            request,
+            "Our system is currently busy. Please try again later.",
+        )
+    else:
+        messages.success(
+            request,
+            "Your message was sent successfully.\nWe will touch you back soon.",
         )
 
-        future = email_executor.submit(email_message.send, fail_silently=False)
-        if future.done() and future.exception():
-            messages.error(
-                request,
-                "Our system is currently busy. Please try again later.",
-            )
-        else:
-            messages.success(
-                request,
-                "Your message was sent successfully.\nWe will touch you back soon.",
-            )
-
-        return redirect("base:home")
-
-    return form
+    return redirect("base:home")
 
 
 def _get_cached_home_data(user_email):
