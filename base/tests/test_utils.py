@@ -13,6 +13,7 @@ from base.utils import (
     HealthCheckMiddleware,
     _generate_captcha,
     _parse_int,
+    _parse_x_forwarded_for,
     captcha_is_valid,
     client_ip_key,
     get_client_ip,
@@ -94,6 +95,47 @@ class ClientIpKeyTest(TestCase):
         if "REMOTE_ADDR" in request.META:
             del request.META["REMOTE_ADDR"]
         self.assertEqual(client_ip_key("test_group", request), "unknown")
+
+
+class ParseXForwardedForTest(SimpleTestCase):
+    def setUp(self):
+        self.trusted_nets = (ipaddress.ip_network("10.0.0.0/8"),)
+
+    def test_all_invalid_ips(self):
+        self.assertEqual(
+            _parse_x_forwarded_for("invalid-ip, another-invalid", self.trusted_nets),
+            "unknown",
+        )
+
+    def test_mixed_invalid_valid_ips(self):
+        self.assertEqual(
+            _parse_x_forwarded_for("192.168.1.1, invalid-ip", self.trusted_nets),
+            "unknown",
+        )
+
+    def test_invalid_valid_ips_reverse(self):
+        self.assertEqual(
+            _parse_x_forwarded_for("invalid-ip, 10.0.0.5", self.trusted_nets),
+            "unknown",
+        )
+
+    def test_all_trusted_ips(self):
+        self.assertEqual(
+            _parse_x_forwarded_for("10.0.0.1, 10.0.0.2", self.trusted_nets),
+            "10.0.0.1",
+        )
+
+    def test_mixed_trusted_untrusted_ips(self):
+        self.assertEqual(
+            _parse_x_forwarded_for("192.168.1.1, 10.0.0.2", self.trusted_nets),
+            "192.168.1.1",
+        )
+
+    def test_mixed_trusted_untrusted_ips_reverse(self):
+        self.assertEqual(
+            _parse_x_forwarded_for("10.0.0.1, 192.168.1.2", self.trusted_nets),
+            "192.168.1.2",
+        )
 
 
 class GetClientIpTest(TestCase):

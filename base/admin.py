@@ -12,16 +12,8 @@ class WorksAdmin(admin.ModelAdmin):
     ordering = ["-created"]
     list_display = ["work_title", "address", "created"]
 
-    class Meta:
-        __slot__ = "model"
-        model = Work
-
 
 @admin.register(Skill)
 class SkillsAdmin(admin.ModelAdmin):
     ordering = ["-created"]
     list_display = ["skill", "created"]
-
-    class Meta:
-        __slot__ = "model"
-        model = Skill

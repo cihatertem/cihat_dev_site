@@ -22,6 +22,10 @@ class WorkModelTest(TestCase):
             "test_image.jpg", img_io.read(), content_type="image/jpeg"
         )
 
+    def test_str_representation(self):
+        work = Work(customer="Test Customer")
+        self.assertEqual(str(work), "Test Customer")
+
     def test_save_resizes_large_image(self):
         large_image = self.generate_test_image(500, 300)
         work = Work(user=self.user, customer="Test Customer", snapshot=large_image)

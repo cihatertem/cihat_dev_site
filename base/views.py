@@ -90,8 +90,8 @@ def _get_cached_home_data(user_email):
         user = get_object_or_404(
             User.objects.prefetch_related("skill_set", "work_set"), email=user_email
         )
-        skills = user.skill_set.all()
-        works = user.work_set.all()
+        skills = list(user.skill_set.all())
+        works = list(user.work_set.all())
         return skills, works
 
     return cache.get_or_set("home_data", get_home_data, 60 * 15)
