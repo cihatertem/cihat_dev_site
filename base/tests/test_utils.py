@@ -1,7 +1,7 @@
 import ipaddress
 import threading
 from http import HTTPStatus
-from unittest.mock import MagicMock
+from unittest.mock import MagicMock, patch
 
 from django.http import JsonResponse
 from django.test import RequestFactory, SimpleTestCase, TestCase, override_settings
@@ -286,6 +286,26 @@ class GenerateCaptchaTest(TestCase):
         # Assert the session contains the sum of the two numbers
         self.assertIn(CAPTCHA_SESSION_KEY, request.session)
         self.assertEqual(request.session[CAPTCHA_SESSION_KEY], num_one + num_two)
+
+    @patch("base.utils.secrets.randbelow")
+    def test_generate_captcha_mocked(self, mock_randbelow):
+        # Set mock side effects (returns 4, then 7)
+        # randbelow(10) + 1 -> 5, 8
+        mock_randbelow.side_effect = [4, 7]
+
+        request = self.factory.get("/")
+        request.session = {}
+
+        num_one, num_two = _generate_captcha(request)
+
+        # Assert the mocked values were used
+        self.assertEqual(num_one, 5)
+        self.assertEqual(num_two, 8)
+        self.assertEqual(mock_randbelow.call_count, 2)
+
+        # Assert the session contains the sum
+        self.assertIn(CAPTCHA_SESSION_KEY, request.session)
+        self.assertEqual(request.session[CAPTCHA_SESSION_KEY], 13)
 
 
 class PhotoResizerTest(SimpleTestCase):

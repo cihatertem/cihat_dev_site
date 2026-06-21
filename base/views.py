@@ -70,7 +70,7 @@ def _send_contact_email(request, name, subject, email, body, user_email, ip_addr
         From {name}, {email}, {ip_address},\n
         Subject {subject},\n
         {body}\n
-        Site: www.cihatertem.dev
+        Site: {request.get_host()}
         """,
         user_email,
         [user_email],
