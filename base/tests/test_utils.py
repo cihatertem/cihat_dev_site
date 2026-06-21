@@ -137,6 +137,14 @@ class ParseXForwardedForTest(SimpleTestCase):
             "192.168.1.2",
         )
 
+    def test_ips_with_spaces(self):
+        self.assertEqual(
+            _parse_x_forwarded_for(
+                "192.168.1.1,  10.0.0.1 , 10.0.0.2 ", self.trusted_nets
+            ),
+            "192.168.1.1",
+        )
+
 
 class GetClientIpTest(TestCase):
     def setUp(self):

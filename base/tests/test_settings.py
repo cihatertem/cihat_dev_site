@@ -29,6 +29,13 @@ class StripEnvTests(SimpleTestCase):
         result = self.env.get_value("TEST_DEFAULT", default="\ndefault_val\n")
         self.assertEqual(result, "default_val")
 
+    def test_get_value_with_parse_default_true(self):
+        # Verify that parse_default=True passes through to super() and casts the default correctly
+        result = self.env.get_value(
+            "TEST_PARSE_DEFAULT", cast=int, default="123\n", parse_default=True
+        )
+        self.assertEqual(result, 123)
+
 
 class GetSecretTests(SimpleTestCase):
     @patch.dict(os.environ, {"MY_TEST_KEY": "my_secret_value\n"})

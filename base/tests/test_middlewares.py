@@ -35,6 +35,24 @@ class TrustedProxyMiddlewareTests(TestCase):
         self.assertNotIn("HTTP_X_FORWARDED_HOST", request.META)
         self.assertNotIn("HTTP_X_FORWARDED_PROTO", request.META)
 
+    @override_settings(TRUSTED_PROXY_NETS=[ipaddress.ip_network("2001:db8::/32")])
+    def test_trusted_proxy_keeps_headers_ipv6(self):
+        request = self._get_request_with_headers(remote_addr="2001:db8::1")
+        self.middleware(request)
+
+        self.assertEqual(request.META.get("HTTP_X_FORWARDED_FOR"), "203.0.113.195")
+        self.assertEqual(request.META.get("HTTP_X_FORWARDED_HOST"), "example.com")
+        self.assertEqual(request.META.get("HTTP_X_FORWARDED_PROTO"), "https")
+
+    @override_settings(TRUSTED_PROXY_NETS=[ipaddress.ip_network("2001:db8::/32")])
+    def test_untrusted_proxy_strips_headers_ipv6(self):
+        request = self._get_request_with_headers(remote_addr="2001:db9::1")
+        self.middleware(request)
+
+        self.assertNotIn("HTTP_X_FORWARDED_FOR", request.META)
+        self.assertNotIn("HTTP_X_FORWARDED_HOST", request.META)
+        self.assertNotIn("HTTP_X_FORWARDED_PROTO", request.META)
+
     @override_settings(TRUSTED_PROXY_NETS=[ipaddress.ip_network("10.0.0.0/8")])
     def test_trusted_proxy_keeps_headers(self):
         request = self._get_request_with_headers(remote_addr="10.0.0.5")

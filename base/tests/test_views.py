@@ -237,6 +237,26 @@ class HomePageViewTests(TestCase):
         with self.assertRaises(ImproperlyConfigured):
             self.client.get(self.url)
 
+    def test_get_cached_home_data_unmocked(self):
+        """Test the real DB query within the unmocked get_home_data."""
+        cache.clear()
+
+        # Call the real unmocked function
+        skills, works = _get_cached_home_data(self.test_email)
+
+        # Assert data correctly fetched from DB
+        self.assertEqual(len(skills), 1)
+        self.assertEqual(skills[0].skill, "Python")
+        self.assertEqual(len(works), 1)
+        self.assertEqual(works[0].customer, "Test Customer")
+
+        # Test the 404 behavior for non-existent email
+        cache.clear()
+        from django.http import Http404
+
+        with self.assertRaises(Http404):
+            _get_cached_home_data("nonexistent@example.com")
+
     def test_get_cached_home_data(self):
         cache.clear()
 
