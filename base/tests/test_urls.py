@@ -15,9 +15,8 @@ class TestUrls(TestCase):
         self.assertTrue(response["Content-Type"].startswith("text/plain"))
 
     def test_home_url_resolves(self):
-        import os
-
         from django.core.cache import cache
+        from django.test import override_settings
 
         from base.models import User
 
@@ -25,8 +24,6 @@ class TestUrls(TestCase):
 
         # Create a user to avoid 404 since home view now relies on it
         test_email = "test@example.com"
-        original_email = os.environ.get("EMAIL")
-        os.environ["EMAIL"] = test_email
 
         User.objects.create_user(
             username="testuser",
@@ -35,11 +32,7 @@ class TestUrls(TestCase):
         )
 
         url = reverse("base:home")
-        response = self.client.get(url)
-
-        if original_email is not None:
-            os.environ["EMAIL"] = original_email
-        else:
-            del os.environ["EMAIL"]
+        with override_settings(CONTACT_EMAIL=test_email):
+            response = self.client.get(url)
 
         self.assertEqual(response.status_code, 200)

@@ -1,5 +1,3 @@
-import os
-
 from django.conf import settings
 from django.contrib import messages
 from django.core.cache import cache
@@ -113,9 +111,9 @@ def _get_cached_home_data(user_email):
 @require_http_methods(["GET", "POST"])
 def home_page(request):
     template = "base/home.html"
-    user_email = os.getenv("EMAIL")
+    user_email = settings.CONTACT_EMAIL
     if not user_email:
-        raise ImproperlyConfigured("EMAIL environment variable is not set")
+        raise ImproperlyConfigured("CONTACT_EMAIL setting is not set")
 
     skills, works = _get_cached_home_data(user_email)
     context = {"skills": skills, "works": works}

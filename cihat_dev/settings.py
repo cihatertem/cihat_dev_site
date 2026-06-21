@@ -153,6 +153,7 @@ DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
 AUTH_USER_MODEL = "base.User"
 
 # Email backend and settings
+CONTACT_EMAIL = env.str("EMAIL", default=None)
 EMAIL_BACKEND = "django.core.mail.backends.smtp.EmailBackend"
 EMAIL_HOST = env.str("EMAIL_HOST", "")
 EMAIL_PORT = 587

@@ -160,7 +160,7 @@ class GetClientIpTest(TestCase):
             del request.META["REMOTE_ADDR"]
         self.assertIsNone(get_client_ip(request))
 
-    def test_invalid_remote_addr(self):
+    def test_get_client_ip_value_error(self):
         request = self.factory.get("/", REMOTE_ADDR="not_an_ip")
         self.assertEqual(get_client_ip(request), "unknown")
 

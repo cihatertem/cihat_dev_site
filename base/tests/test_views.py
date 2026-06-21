@@ -1,4 +1,3 @@
-import os
 import time
 from unittest.mock import MagicMock, patch
 
@@ -13,6 +12,7 @@ from base.utils import CAPTCHA_SESSION_KEY
 from base.views import _get_cached_home_data
 
 
+@override_settings(CONTACT_EMAIL="testuser@example.com")
 class HomePageViewTests(TestCase):
     def setUp(self):
         # Clear cache since the view caches data
@@ -21,10 +21,6 @@ class HomePageViewTests(TestCase):
         self.client = Client()
         self.url = reverse("base:home")
         self.test_email = "testuser@example.com"
-
-        # Set environment variable
-        self.original_email = os.environ.get("EMAIL")
-        os.environ["EMAIL"] = self.test_email
 
         # Create user and related data
         self.user = User.objects.create_user(
@@ -41,10 +37,6 @@ class HomePageViewTests(TestCase):
 
     def tearDown(self):
         mail.outbox.clear()
-        if self.original_email is not None:
-            os.environ["EMAIL"] = self.original_email
-        else:
-            os.environ.pop("EMAIL", None)
         cache.clear()
 
     def test_home_page_get(self):
@@ -229,11 +221,8 @@ class HomePageViewTests(TestCase):
         response = self.client.get(self.url)
         self.assertEqual(response.status_code, 404)
 
+    @override_settings(CONTACT_EMAIL=None)
     def test_home_page_missing_email_env_var(self):
-        # Unset EMAIL environment variable
-        if "EMAIL" in os.environ:
-            del os.environ["EMAIL"]
-
         with self.assertRaises(ImproperlyConfigured):
             self.client.get(self.url)
 
