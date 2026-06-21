@@ -63,7 +63,7 @@ class HealthCheckMiddlewareTest(TestCase):
         self.assertEqual(response.content, b'{"status": "ok"}')
 
 
-class ParseIntTest(TestCase):
+class ParseIntTest(SimpleTestCase):
     def test_valid_integers(self):
         self.assertEqual(_parse_int("123"), 123)
         self.assertEqual(_parse_int("-456"), -456)
@@ -80,6 +80,10 @@ class ParseIntTest(TestCase):
     def test_type_error(self):
         self.assertIsNone(_parse_int([1, 2, 3]))
         self.assertIsNone(_parse_int({"a": 1}))
+
+    def test_error_handling(self):
+        self.assertIsNone(_parse_int(None))
+        self.assertIsNone(_parse_int("abc"))
 
 
 class ClientIpKeyTest(TestCase):
@@ -158,7 +162,7 @@ class GetClientIpTest(TestCase):
 
     def test_invalid_remote_addr(self):
         request = self.factory.get("/", REMOTE_ADDR="not_an_ip")
-        self.assertEqual(get_client_ip(request), "not_an_ip")
+        self.assertEqual(get_client_ip(request), "unknown")
 
     def test_no_trusted_proxies(self):
         request = self.factory.get("/", REMOTE_ADDR="192.168.1.5")

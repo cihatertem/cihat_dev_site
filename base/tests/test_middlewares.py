@@ -35,6 +35,11 @@ class TrustedProxyMiddlewareTests(TestCase):
         self.assertNotIn("HTTP_X_FORWARDED_HOST", request.META)
         self.assertNotIn("HTTP_X_FORWARDED_PROTO", request.META)
 
+    @override_settings(TRUSTED_PROXY_NETS=[ipaddress.ip_network("10.0.0.0/8")])
+    def test_is_trusted_proxy_invalid_remote_addr(self):
+        request = self._get_request_with_headers(remote_addr="not_an_ip")
+        self.assertFalse(TrustedProxyMiddleware._is_trusted_proxy(request))
+
     @override_settings(TRUSTED_PROXY_NETS=[ipaddress.ip_network("2001:db8::/32")])
     def test_trusted_proxy_keeps_headers_ipv6(self):
         request = self._get_request_with_headers(remote_addr="2001:db8::1")

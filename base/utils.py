@@ -109,7 +109,7 @@ def get_client_ip(request) -> str | None:
     try:
         ra = ipaddress.ip_address(remote)
     except ValueError:
-        return remote
+        return "unknown"
 
     trusted_nets = getattr(settings, "TRUSTED_PROXY_NETS", None) or []
 
