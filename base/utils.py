@@ -121,9 +121,15 @@ def get_client_ip(request) -> str | None:
         if ra in checker:
             xff = request.META.get("HTTP_X_FORWARDED_FOR")
             if xff:
-                return _parse_x_forwarded_for(xff, trusted_nets_tuple)
+                parsed_xff = _parse_x_forwarded_for(xff, trusted_nets_tuple)
+                if parsed_xff == "unknown":
+                    return "unknown"
+                try:
+                    return str(ipaddress.ip_address(parsed_xff))
+                except ValueError:
+                    return "unknown"
 
-    return remote
+    return str(ra)
 
 
 def client_ip_key(group, request):

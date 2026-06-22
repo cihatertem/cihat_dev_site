@@ -3,9 +3,9 @@ import threading
 from http import HTTPStatus
 from unittest.mock import MagicMock, patch
 
-from PIL import ExifTags, Image
 from django.http import JsonResponse
 from django.test import RequestFactory, SimpleTestCase, TestCase, override_settings
+from PIL import ExifTags, Image
 
 from base.utils import (
     CAPTCHA_SESSION_KEY,
@@ -228,6 +228,32 @@ class GetClientIpTest(TestCase):
             HTTP_X_FORWARDED_FOR="192.168.1.5, invalid-ip",
         )
         self.assertEqual(get_client_ip(request), "unknown")
+
+    def test_ipv6_normalization(self):
+        # Test that functionally equivalent IPv6 strings are normalized to the same format
+        request1 = self.factory.get("/", REMOTE_ADDR="2001:db8::1")
+        request2 = self.factory.get(
+            "/", REMOTE_ADDR="2001:0db8:0000:0000:0000:0000:0000:0001"
+        )
+
+        self.assertEqual(get_client_ip(request1), "2001:db8::1")
+        self.assertEqual(get_client_ip(request2), "2001:db8::1")
+
+    @override_settings(TRUSTED_PROXY_NETS=[ipaddress.ip_network("10.0.0.0/8")])
+    def test_ipv6_normalization_in_xff(self):
+        request1 = self.factory.get(
+            "/",
+            REMOTE_ADDR="10.0.0.5",
+            HTTP_X_FORWARDED_FOR="2001:db8::1",
+        )
+        request2 = self.factory.get(
+            "/",
+            REMOTE_ADDR="10.0.0.5",
+            HTTP_X_FORWARDED_FOR="2001:0db8:0000:0000:0000:0000:0000:0001",
+        )
+
+        self.assertEqual(get_client_ip(request1), "2001:db8::1")
+        self.assertEqual(get_client_ip(request2), "2001:db8::1")
 
 
 class CaptchaIsValidTest(TestCase):
