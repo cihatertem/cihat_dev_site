@@ -3,9 +3,9 @@ import threading
 from http import HTTPStatus
 from unittest.mock import MagicMock, patch
 
+from PIL import ExifTags, Image
 from django.http import JsonResponse
 from django.test import RequestFactory, SimpleTestCase, TestCase, override_settings
-from PIL import ExifTags, Image
 
 from base.utils import (
     CAPTCHA_SESSION_KEY,
@@ -455,6 +455,31 @@ class BoundedExecutorTest(SimpleTestCase):
         # Verify that the third task returns a Future with RuntimeError
         with self.assertRaisesMessage(RuntimeError, "Task queue is full"):
             f3.result()
+
+        # Cleanup
+        event.set()
+        executor.shutdown()
+
+    def test_bounded_executor_queue_full_sync_check(self):
+        executor = BoundedExecutor(max_workers=1, max_queue=1)
+        event = threading.Event()
+
+        def blocking_task():
+            event.wait()
+            return True
+
+        # First task takes the worker
+        executor.submit(blocking_task)
+        # Second task fills the queue
+        executor.submit(blocking_task)
+
+        # Third task should fail immediately
+        f3 = executor.submit(blocking_task)
+
+        # Verify that we can synchronously check for the exception using done() and exception()
+        self.assertTrue(f3.done())
+        self.assertIsInstance(f3.exception(), RuntimeError)
+        self.assertEqual(str(f3.exception()), "Task queue is full")
 
         # Cleanup
         event.set()

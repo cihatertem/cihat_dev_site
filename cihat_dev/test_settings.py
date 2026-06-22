@@ -93,3 +93,19 @@ class MediaCleanupTestRunner(DiscoverRunner):
 
 
 TEST_RUNNER = "cihat_dev.test_settings.MediaCleanupTestRunner"
+
+LOGGING = {
+    "version": 1,
+    "disable_existing_loggers": False,
+    "handlers": {
+        "null": {
+            "class": "logging.NullHandler",
+        },
+    },
+    "loggers": {
+        "base.utils": {
+            "handlers": ["null"],
+            "propagate": False,
+        },
+    },
+}
