@@ -1,5 +1,6 @@
 import bisect
 import concurrent.futures
+import contextlib
 import functools
 import ipaddress
 import logging
@@ -138,13 +139,9 @@ def client_ip_key(group, request):
 
 
 def _parse_int(value: str | None) -> int | None:
-    try:
+    with contextlib.suppress(TypeError, ValueError):
         return int(value)
-    except (
-        TypeError,
-        ValueError,
-    ):
-        return None
+    return None
 
 
 def captcha_is_valid(request) -> bool:
