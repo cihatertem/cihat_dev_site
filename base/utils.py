@@ -11,6 +11,7 @@ from http import HTTPStatus
 from io import BytesIO
 
 from django.conf import settings
+from django.core.exceptions import ObjectDoesNotExist
 from django.http import JsonResponse
 from django.utils.text import slugify
 from PIL import Image, ImageOps
@@ -228,5 +229,5 @@ def resize_work_snapshot_task(work_id):
 
             if work.snapshot.name != old_name:
                 work.snapshot.storage.delete(old_name)
-    except Exception as e:
+    except (ObjectDoesNotExist, OSError) as e:
         logger.error(f"Error resizing work snapshot {work_id}: {e}")

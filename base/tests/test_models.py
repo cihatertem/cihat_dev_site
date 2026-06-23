@@ -140,8 +140,8 @@ class WorkModelTest(TestCase):
             )
         )
 
-    @mock.patch("base.utils.photo_resizer", side_effect=Exception("Test error"))
-    def test_resize_snapshot_catches_general_exception(self, mock_resizer):
+    @mock.patch("base.utils.photo_resizer", side_effect=OSError("Test error"))
+    def test_resize_snapshot_catches_expected_exceptions(self, mock_resizer):
         large_image = self.generate_test_image(500, 300)
         work = Work(user=self.user, customer="Test Customer", snapshot=large_image)
         work.save()

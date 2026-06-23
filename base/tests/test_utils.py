@@ -426,6 +426,18 @@ class BoundedExecutorTest(SimpleTestCase):
             wait=False, cancel_futures=True
         )
 
+    def test_bounded_executor_real_shutdown(self):
+        executor = BoundedExecutor(max_workers=1, max_queue=1)
+        executor.shutdown()
+
+        def dummy_task():
+            pass
+
+        with self.assertRaisesMessage(
+            RuntimeError, "cannot schedule new futures after shutdown"
+        ):
+            executor.submit(dummy_task)
+
     def test_bounded_executor_submit_success(self):
         executor = BoundedExecutor(max_workers=1, max_queue=1)
 
