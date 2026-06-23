@@ -12,6 +12,7 @@ from io import BytesIO
 
 from django.conf import settings
 from django.core.exceptions import ObjectDoesNotExist
+from django.core.files.base import ContentFile
 from django.http import JsonResponse
 from django.utils.text import slugify
 from PIL import Image, ImageOps
@@ -77,13 +78,15 @@ def _get_ip_range_checker(trusted_nets_tuple: tuple) -> IPRangeChecker:
 
 
 @functools.lru_cache(maxsize=1024)
-def _is_ip_trusted(ip_str: str, trusted_nets_tuple: tuple) -> bool | None:
+def _check_ip_trust_and_normalize(
+    ip_str: str, trusted_nets_tuple: tuple
+) -> tuple[bool | None, str | None]:
     try:
         ip_obj = ipaddress.ip_address(ip_str)
     except ValueError:
-        return None
+        return None, None
     checker = _get_ip_range_checker(trusted_nets_tuple)
-    return ip_obj in checker
+    return ip_obj in checker, str(ip_obj)
 
 
 def _parse_x_forwarded_for(xff: str, trusted_nets_tuple: tuple) -> str:
@@ -91,16 +94,17 @@ def _parse_x_forwarded_for(xff: str, trusted_nets_tuple: tuple) -> str:
     # Sağdan sola (en son proxy'den istemciye doğru) ilerle
     for ip_raw in reversed(ips):
         ip_str = ip_raw.strip()
-        trusted = _is_ip_trusted(ip_str, trusted_nets_tuple)
+        trusted, norm_ip = _check_ip_trust_and_normalize(ip_str, trusted_nets_tuple)
         if trusted is None:
             # Geçersiz IP formatı - güvenilmez kabul et
             return "unknown"
         if not trusted:
             # Değilse, bulduğumuz ilk untrusted IP gerçek istemcidir.
-            return ip_str
+            return norm_ip
 
     # Tüm IP'ler trusted ise, en soldakini dönebiliriz.
-    return ips[0].strip()
+    _, norm_ip = _check_ip_trust_and_normalize(ips[0].strip(), trusted_nets_tuple)
+    return norm_ip or "unknown"
 
 
 def get_client_ip(request) -> str | None:
@@ -123,13 +127,7 @@ def get_client_ip(request) -> str | None:
         if ra in checker:
             xff = request.META.get("HTTP_X_FORWARDED_FOR")
             if xff:
-                parsed_xff = _parse_x_forwarded_for(xff, trusted_nets_tuple)
-                if parsed_xff == "unknown":
-                    return "unknown"
-                try:
-                    return str(ipaddress.ip_address(parsed_xff))
-                except ValueError:
-                    return "unknown"
+                return _parse_x_forwarded_for(xff, trusted_nets_tuple)
 
     return str(ra)
 
@@ -200,9 +198,6 @@ image_executor = BoundedExecutor(max_workers=2, max_queue=10)
 
 def resize_work_snapshot_task(work_id):
     try:
-        from django.core.files.base import ContentFile
-        from PIL import Image
-
         from base.models import Work
 
         work = Work.objects.get(id=work_id)
@@ -210,8 +205,7 @@ def resize_work_snapshot_task(work_id):
             return
 
         try:
-            if not hasattr(work.snapshot, "file"):
-                return
+            work.snapshot.file
         except FileNotFoundError:
             return
 
