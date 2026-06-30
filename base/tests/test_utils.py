@@ -11,7 +11,9 @@ from base.utils import (
     CAPTCHA_SESSION_KEY,
     BoundedExecutor,
     HealthCheckMiddleware,
+    IPRangeChecker,
     _generate_captcha,
+    _get_ip_range_checker,
     _parse_int,
     _parse_x_forwarded_for,
     captcha_is_valid,
@@ -32,6 +34,46 @@ class WorkDirectoryPathTest(TestCase):
 
         result = work_directory_path(instance, filename)
         self.assertEqual(result, "works/acme_corp/logo.png")
+
+
+class GetIPRangeCheckerTest(SimpleTestCase):
+    def test_get_ip_range_checker_returns_checker(self):
+        networks = (
+            ipaddress.ip_network("10.0.0.0/24"),
+            ipaddress.ip_network("192.168.1.0/24"),
+        )
+        checker = _get_ip_range_checker(networks)
+        self.assertIsInstance(checker, IPRangeChecker)
+        self.assertEqual(checker.original_nets, networks)
+
+    @patch("base.utils.IPRangeChecker")
+    def test_get_ip_range_checker_caching(self, mock_ip_range_checker):
+        # Clear the cache to ensure a clean state
+        _get_ip_range_checker.cache_clear()
+
+        # Setup the mock
+        mock_instance = MagicMock()
+        mock_ip_range_checker.return_value = mock_instance
+
+        networks_1 = ("10.0.0.0/24",)
+        networks_2 = ("192.168.1.0/24",)
+
+        # First call, should instantiate a new IPRangeChecker
+        checker1 = _get_ip_range_checker(networks_1)
+        self.assertEqual(checker1, mock_instance)
+        mock_ip_range_checker.assert_called_once_with(networks_1)
+
+        # Second call with the same arguments, should use cache
+        checker2 = _get_ip_range_checker(networks_1)
+        self.assertEqual(checker2, mock_instance)
+        mock_ip_range_checker.assert_called_once_with(networks_1)  # Still called once
+
+        # Third call with different arguments, should instantiate a new IPRangeChecker
+        # Since maxsize=1, this will evict the previous cached result
+        checker3 = _get_ip_range_checker(networks_2)
+        self.assertEqual(checker3, mock_instance)
+        self.assertEqual(mock_ip_range_checker.call_count, 2)
+        mock_ip_range_checker.assert_called_with(networks_2)
 
 
 class HealthCheckMiddlewareTest(TestCase):
