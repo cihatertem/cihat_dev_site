@@ -85,6 +85,10 @@ class ParseIntTest(SimpleTestCase):
         self.assertIsNone(_parse_int(None))
         self.assertIsNone(_parse_int("abc"))
 
+    def test_whitespace_strings(self):
+        self.assertEqual(_parse_int(" 123 "), 123)
+        self.assertEqual(_parse_int("\t456\n"), 456)
+
 
 class ClientIpKeyTest(TestCase):
     def setUp(self):

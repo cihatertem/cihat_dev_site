@@ -1,5 +1,6 @@
 from django.conf import settings
 from django.contrib import messages
+from django.contrib.sites.shortcuts import get_current_site
 from django.core.cache import cache
 from django.core.exceptions import ImproperlyConfigured
 from django.core.mail import EmailMessage
@@ -68,7 +69,7 @@ def _send_contact_email(request, name, subject, email, body, user_email, ip_addr
         From {name}, {email}, {ip_address},\n
         Subject {subject},\n
         {body}\n
-        Site: {request.get_host()}
+        Site: {get_current_site(request).domain}
         """,
         user_email,
         [user_email],

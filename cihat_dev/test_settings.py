@@ -7,7 +7,6 @@ from django.db.models.expressions import Expression
 from django.test.runner import DiscoverRunner
 
 from cihat_dev.settings import *  # noqa
-from cihat_dev.settings import BASE_DIR
 
 SECRET_KEY = secrets.token_urlsafe(50)
 
@@ -34,6 +33,7 @@ CACHES = {
 MIGRATION_MODULES = {
     "base": None,
 }
+
 
 # Monkeypatch GinIndex and SearchVector for SQLite tests
 
