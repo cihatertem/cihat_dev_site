@@ -90,19 +90,28 @@ class ParseIntTest(SimpleTestCase):
         self.assertEqual(_parse_int("\t456\n"), 456)
 
 
-class ClientIpKeyTest(TestCase):
+class ClientIpKeyTest(SimpleTestCase):
     def setUp(self):
         self.factory = RequestFactory()
+        self.request = self.factory.get("/")
 
-    def test_client_ip_key_with_ip(self):
-        request = self.factory.get("/", REMOTE_ADDR="192.168.1.5")
-        self.assertEqual(client_ip_key("test_group", request), "192.168.1.5")
+    @patch("base.utils.get_client_ip")
+    def test_client_ip_key_with_ip(self, mock_get_client_ip):
+        mock_get_client_ip.return_value = "192.168.1.5"
+        self.assertEqual(client_ip_key("test_group", self.request), "192.168.1.5")
+        mock_get_client_ip.assert_called_once_with(self.request)
 
-    def test_client_ip_key_without_ip(self):
-        request = self.factory.get("/")
-        if "REMOTE_ADDR" in request.META:
-            del request.META["REMOTE_ADDR"]
-        self.assertEqual(client_ip_key("test_group", request), "unknown")
+    @patch("base.utils.get_client_ip")
+    def test_client_ip_key_without_ip(self, mock_get_client_ip):
+        mock_get_client_ip.return_value = None
+        self.assertEqual(client_ip_key("test_group", self.request), "unknown")
+        mock_get_client_ip.assert_called_once_with(self.request)
+
+    @patch("base.utils.get_client_ip")
+    def test_client_ip_key_empty_ip(self, mock_get_client_ip):
+        mock_get_client_ip.return_value = ""
+        self.assertEqual(client_ip_key("test_group", self.request), "unknown")
+        mock_get_client_ip.assert_called_once_with(self.request)
 
 
 class ParseXForwardedForTest(SimpleTestCase):
