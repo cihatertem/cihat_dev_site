@@ -90,10 +90,15 @@ def _check_ip_trust_and_normalize(
 
 
 def _parse_x_forwarded_for(xff: str, trusted_nets_tuple: tuple) -> str:
-    ips = xff.split(",")
-    # Sağdan sola (en son proxy'den istemciye doğru) ilerle
-    for ip_raw in reversed(ips):
+    end = len(xff)
+    last_norm_ip = "unknown"
+
+    while end > 0:
+        start = xff.rfind(",", 0, end)
+        # Virgül yoksa string'in başından end'e kadar, varsa virgülden sonrasını al
+        ip_raw = xff[:end] if start == -1 else xff[start + 1 : end]
         ip_str = ip_raw.strip()
+
         trusted, norm_ip = _check_ip_trust_and_normalize(ip_str, trusted_nets_tuple)
         if trusted is None:
             # Geçersiz IP formatı - güvenilmez kabul et
@@ -102,9 +107,11 @@ def _parse_x_forwarded_for(xff: str, trusted_nets_tuple: tuple) -> str:
             # Değilse, bulduğumuz ilk untrusted IP gerçek istemcidir.
             return norm_ip
 
-    # Tüm IP'ler trusted ise, en soldakini dönebiliriz.
-    _, norm_ip = _check_ip_trust_and_normalize(ips[0].strip(), trusted_nets_tuple)
-    return norm_ip or "unknown"
+        end = start
+        last_norm_ip = norm_ip
+
+    # Tüm IP'ler trusted ise, en soldakini (son işlenen) dönebiliriz.
+    return last_norm_ip
 
 
 def get_client_ip(request) -> str | None:
