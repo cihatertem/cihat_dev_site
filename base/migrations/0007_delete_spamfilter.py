@@ -4,13 +4,12 @@ from django.db import migrations
 
 
 class Migration(migrations.Migration):
-
     dependencies = [
-        ('base', '0006_spamfilter'),
+        ("base", "0006_spamfilter"),
     ]
 
     operations = [
         migrations.DeleteModel(
-            name='SpamFilter',
+            name="SpamFilter",
         ),
     ]

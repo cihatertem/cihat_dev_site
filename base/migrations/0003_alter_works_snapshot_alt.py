@@ -4,15 +4,19 @@ from django.db import migrations, models
 
 
 class Migration(migrations.Migration):
-
     dependencies = [
-        ('base', '0002_alter_works_snapshot'),
+        ("base", "0002_alter_works_snapshot"),
     ]
 
     operations = [
         migrations.AlterField(
-            model_name='works',
-            name='snapshot_alt',
-            field=models.CharField(blank=True, max_length=200, null=True, verbose_name='Landing Page Screenshot Alt'),
+            model_name="works",
+            name="snapshot_alt",
+            field=models.CharField(
+                blank=True,
+                max_length=200,
+                null=True,
+                verbose_name="Landing Page Screenshot Alt",
+            ),
         ),
     ]

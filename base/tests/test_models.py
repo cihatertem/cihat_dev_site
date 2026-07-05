@@ -140,6 +140,22 @@ class WorkModelTest(TestCase):
             )
         )
 
+    @mock.patch("base.models.Work.objects.get")
+    def test_resize_snapshot_catches_object_does_not_exist(self, mock_get):
+        from django.core.exceptions import ObjectDoesNotExist
+
+        mock_get.side_effect = ObjectDoesNotExist("Test object not found")
+
+        with self.assertLogs("base.utils", level="ERROR") as cm:
+            resize_work_snapshot_task(1)
+
+        self.assertTrue(
+            any(
+                "Error resizing work snapshot 1: Test object not found" in msg
+                for msg in cm.output
+            )
+        )
+
     @mock.patch("base.utils.photo_resizer", side_effect=OSError("Test error"))
     def test_resize_snapshot_catches_expected_exceptions(self, mock_resizer):
         large_image = self.generate_test_image(500, 300)

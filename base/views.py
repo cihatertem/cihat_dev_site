@@ -41,10 +41,6 @@ def _process_contact_post(request, user_email):
 
     form = ContactForm(request.POST)
     if form.is_valid():
-        name = form.cleaned_data.get("name")
-        subject = form.cleaned_data.get("subject")
-        email = form.cleaned_data.get("email")
-        body = form.cleaned_data.get("body")
         website = form.cleaned_data.get("website", "")
 
         if website.strip():
@@ -54,15 +50,18 @@ def _process_contact_post(request, user_email):
 
         ip_address = get_client_ip(request)
 
-        return _send_contact_email(
-            request, name, subject, email, body, user_email, ip_address
-        )
+        return _send_contact_email(request, form.cleaned_data, user_email, ip_address)
 
     return form
 
 
-def _send_contact_email(request, name, subject, email, body, user_email, ip_address):
+def _send_contact_email(request, form_data, user_email, ip_address):
     """Helper function to create and send the contact email."""
+    name = form_data.get("name")
+    subject = form_data.get("subject")
+    email = form_data.get("email")
+    body = form_data.get("body")
+
     email_message = EmailMessage(
         subject,
         f"""
@@ -93,11 +92,9 @@ def _send_contact_email(request, name, subject, email, body, user_email, ip_addr
 
 def _get_cached_home_data(user_email):
     def get_home_data():
-        user = get_object_or_404(
-            User.objects.prefetch_related("skill_set", "work_set"), email=user_email
-        )
-        skills = list(user.skill_set.all())
-        works = list(user.work_set.all())
+        user = get_object_or_404(User, email=user_email)
+        skills = tuple(user.skill_set.all().iterator())
+        works = tuple(user.work_set.all().iterator())
         return skills, works
 
     return cache.get_or_set("home_data", get_home_data, 60 * 15)

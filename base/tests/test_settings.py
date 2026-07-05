@@ -1,6 +1,8 @@
+import importlib
 import os
 from unittest.mock import mock_open, patch
 
+from django.core.exceptions import ImproperlyConfigured
 from django.test import SimpleTestCase
 
 from cihat_dev.settings import StripEnv, env
@@ -88,3 +90,15 @@ class MockSearchVectorTests(SimpleTestCase):
         vector = MockSearchVector("field_name")
         result = vector.resolve_expression()
         self.assertIs(result, vector)
+
+
+class SettingsIntegrationTests(SimpleTestCase):
+    def test_missing_secret_key_raises_error(self):
+        import cihat_dev.settings
+
+        # We need to test the module loading without SECRET_KEY
+        with patch.dict(os.environ, {}, clear=True):
+            with self.assertRaisesMessage(
+                ImproperlyConfigured, "Set the SECRET_KEY environment variable"
+            ):
+                importlib.reload(cihat_dev.settings)
