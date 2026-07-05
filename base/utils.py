@@ -52,14 +52,11 @@ class IPRangeChecker:
 
     def __init__(self, networks: tuple):
         self.original_nets = networks
-        self.v4_nets = []
-        self.v6_nets = []
+        v4_nets = (net for net in networks if net.version == 4)
+        v6_nets = (net for net in networks if net.version == 6)
 
-        for net in ipaddress.collapse_addresses(networks):
-            if net.version == 4:
-                self.v4_nets.append(net)
-            else:
-                self.v6_nets.append(net)
+        self.v4_nets = list(ipaddress.collapse_addresses(v4_nets))
+        self.v6_nets = list(ipaddress.collapse_addresses(v6_nets))
 
     def __contains__(self, ip: ipaddress.IPv4Address | ipaddress.IPv6Address) -> bool:
         nets = self.v4_nets if ip.version == 4 else self.v6_nets
