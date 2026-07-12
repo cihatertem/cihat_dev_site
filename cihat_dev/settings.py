@@ -237,13 +237,11 @@ CONTACT_RATE_LIMIT = env.str("CONTACT_RATE_LIMIT", "2/m")
 
 if not DEBUG:
     _raw = env.str("TRUSTED_PROXY_NETS", "")
-    TRUSTED_PROXY_NETS = []
+    TRUSTED_PROXY_NETS = (
+        [ipaddress.ip_network(net.strip()) for net in _raw.split(",")] if _raw else []
+    )
 
     USE_TRAEFIK_SECURITY_HEADERS = env.bool("DJANGO_USE_TRAEFIK_SECURITY_HEADERS", True)
-
-    if _raw:
-        for net in _raw.split(","):
-            TRUSTED_PROXY_NETS.append(ipaddress.ip_network(net.strip()))
 
     CSRF_COOKIE_SECURE = True
     CSRF_COOKIE_HTTPONLY = True

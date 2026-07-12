@@ -220,7 +220,7 @@ def resize_work_snapshot_task(work_id):
             output = photo_resizer(image, 250)
 
             old_name = work.snapshot.name
-            new_file_name = "%s.jpg" % work.snapshot.name.split("/")[-1].split(".")[0]
+            new_file_name = f"{work.snapshot.name.split('/')[-1].split('.')[0]}.jpg"
 
             work.snapshot.save(new_file_name, ContentFile(output.read()), save=False)
             work.save(update_fields=["snapshot"])

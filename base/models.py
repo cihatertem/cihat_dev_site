@@ -60,7 +60,7 @@ class Work(models.Model):
     def save(self, *args, **kwargs):
         should_resize = False
         # Avoid running logic if only other fields are updated
-        update_fields = kwargs.get("update_fields", None)
+        update_fields = kwargs.get("update_fields")
         if update_fields is None or "snapshot" in update_fields:
             if self.snapshot and not getattr(self.snapshot, "_committed", True):
                 should_resize = True

@@ -93,8 +93,8 @@ def _send_contact_email(request, form_data, user_email, ip_address):
 def _get_cached_home_data(user_email):
     def get_home_data():
         user = get_object_or_404(User, email=user_email)
-        skills = tuple(user.skill_set.all().iterator())
-        works = tuple(user.work_set.all().iterator())
+        skills = tuple(user.skill_set.all())
+        works = tuple(user.work_set.all())
         return skills, works
 
     return cache.get_or_set("home_data", get_home_data, 60 * 15)

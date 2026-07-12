@@ -82,7 +82,7 @@ STORAGES = {
         "BACKEND": "django.contrib.staticfiles.storage.StaticFilesStorage",
     },
 }
-MEDIA_ROOT = BASE_DIR / "test_media/"
+MEDIA_ROOT = BASE_DIR / "test_media/"  # noqa: F405
 
 
 class MediaCleanupTestRunner(DiscoverRunner):

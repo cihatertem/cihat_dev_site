@@ -63,9 +63,11 @@ class GetSecretTests(SimpleTestCase):
         from environ.fileaware_mapping import FileAwareMapping
 
         test_env_mapping = FileAwareMapping()
-        with patch("builtins.open", m_open):
-            with patch.object(env, "ENVIRON", test_env_mapping):
-                result = env.str("FILE_KEY")
+        with (
+            patch("builtins.open", m_open),
+            patch.object(env, "ENVIRON", test_env_mapping),
+        ):
+            result = env.str("FILE_KEY")
 
         self.assertEqual(result, "file_secret_value\nsecond_line")
         m_open.assert_called_once_with("/path/to/secret.txt", encoding="utf-8")
@@ -97,8 +99,10 @@ class SettingsIntegrationTests(SimpleTestCase):
         import cihat_dev.settings
 
         # We need to test the module loading without SECRET_KEY
-        with patch.dict(os.environ, {}, clear=True):
-            with self.assertRaisesMessage(
+        with (
+            patch.dict(os.environ, {}, clear=True),
+            self.assertRaisesMessage(
                 ImproperlyConfigured, "Set the SECRET_KEY environment variable"
-            ):
-                importlib.reload(cihat_dev.settings)
+            ),
+        ):
+            importlib.reload(cihat_dev.settings)
