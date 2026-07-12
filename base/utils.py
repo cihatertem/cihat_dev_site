@@ -33,7 +33,7 @@ class HealthCheckMiddleware:
 def work_directory_path(instance, filename: str) -> str:
     customer_slug = slugify(instance.customer) or "unknown"
     safe_filename = os.path.basename(filename)
-    return "works/{0}/{1}".format(customer_slug, safe_filename)
+    return f"works/{customer_slug}/{safe_filename}"
 
 
 def photo_resizer(image: Image, size: int) -> BytesIO:
@@ -64,9 +64,7 @@ class IPRangeChecker:
             return False
 
         idx = bisect.bisect_right(nets, ip, key=lambda net: net.network_address) - 1
-        if idx >= 0 and ip in nets[idx]:
-            return True
-        return False
+        return bool(idx >= 0 and ip in nets[idx])
 
 
 @functools.lru_cache(maxsize=1)
