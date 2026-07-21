@@ -14,6 +14,13 @@ class SkillModelTest(TestCase):
         skill = Skill(skill="Python")
         self.assertEqual(str(skill), "Python")
 
+    def test_str_representation_unnamed(self):
+        skill = Skill(skill=None)
+        self.assertEqual(str(skill), "Unnamed")
+
+        skill2 = Skill(skill="")
+        self.assertEqual(str(skill2), "Unnamed")
+
 
 class WorkModelTest(TestCase):
     def setUp(self):

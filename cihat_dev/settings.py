@@ -72,8 +72,8 @@ INSTALLED_APPS = [
 SITE_ID = 1
 
 MIDDLEWARE = [
-    "base.middlewares.TrustedProxyMiddleware",
     "base.utils.HealthCheckMiddleware",
+    "base.middlewares.TrustedProxyMiddleware",
     "django.middleware.security.SecurityMiddleware",
     "django.middleware.csp.ContentSecurityPolicyMiddleware",
     "django.contrib.sessions.middleware.SessionMiddleware",

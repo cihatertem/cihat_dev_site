@@ -1,3 +1,5 @@
+import textwrap
+
 from django.conf import settings
 from django.contrib import messages
 from django.contrib.sites.shortcuts import get_current_site
@@ -64,12 +66,14 @@ def _send_contact_email(request, form_data, user_email, ip_address):
 
     email_message = EmailMessage(
         subject,
-        f"""
-        From {name}, {email}, {ip_address},\n
-        Subject {subject},\n
-        {body}\n
-        Site: {get_current_site(request).domain}
-        """,
+        textwrap.dedent(
+            f"""
+            From {name}, {email}, {ip_address},\n
+            Subject {subject},\n
+            {body}\n
+            Site: {get_current_site(request).domain}
+            """
+        ),
         user_email,
         [user_email],
         reply_to=[email],

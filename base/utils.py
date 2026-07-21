@@ -114,24 +114,27 @@ def get_client_ip(request) -> str | None:
     if not remote:
         return None
 
-    try:
-        ra = ipaddress.ip_address(remote)
-    except ValueError:
-        return "unknown"
-
     trusted_nets = getattr(settings, "TRUSTED_PROXY_NETS", None) or []
 
     if trusted_nets:
         trusted_nets_tuple = tuple(trusted_nets)
-        checker = _get_ip_range_checker(trusted_nets_tuple)
+        trusted, norm_ip = _check_ip_trust_and_normalize(remote, trusted_nets_tuple)
 
-        # Sadece trusted proxy'den geliyorsa XFF'i parse et
-        if ra in checker:
+        if trusted is None:
+            return "unknown"
+
+        if trusted:
             xff = request.META.get("HTTP_X_FORWARDED_FOR")
             if xff:
                 return _parse_x_forwarded_for(xff, trusted_nets_tuple)
 
-    return str(ra)
+        return norm_ip
+
+    try:
+        ra = ipaddress.ip_address(remote)
+        return str(ra)
+    except ValueError:
+        return "unknown"
 
 
 def client_ip_key(group, request):
