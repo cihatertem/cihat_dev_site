@@ -204,6 +204,32 @@ class ParseXForwardedForTest(SimpleTestCase):
             "192.168.1.1",
         )
 
+    def test_multiple_consecutive_commas(self):
+        self.assertEqual(
+            _parse_x_forwarded_for(
+                "192.168.1.1,,10.0.0.1,,,10.0.0.2", self.trusted_nets
+            ),
+            "unknown",
+        )
+
+    def test_trailing_spaces_and_empty_segments(self):
+        self.assertEqual(
+            _parse_x_forwarded_for("192.168.1.1, , 10.0.0.1 ,  ", self.trusted_nets),
+            "unknown",
+        )
+
+    def test_empty_string(self):
+        self.assertEqual(
+            _parse_x_forwarded_for("", self.trusted_nets),
+            "unknown",
+        )
+
+    def test_only_commas(self):
+        self.assertEqual(
+            _parse_x_forwarded_for(",,,", self.trusted_nets),
+            "unknown",
+        )
+
 
 class GetClientIpTest(TestCase):
     def setUp(self):

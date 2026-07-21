@@ -36,3 +36,35 @@ class TestUrls(TestCase):
             response = self.client.get(url)
 
         self.assertEqual(response.status_code, 200)
+
+
+class TestCihatDevUrls(TestCase):
+    def test_debug_urls_appended(self):
+        import importlib
+
+        from django.test import override_settings
+
+        import cihat_dev.urls
+
+        # Ensure we start with DEBUG=False to get the base length
+        with override_settings(DEBUG=False):
+            importlib.reload(cihat_dev.urls)
+            initial_len = len(cihat_dev.urls.urlpatterns)
+
+        try:
+            with override_settings(DEBUG=True):
+                importlib.reload(cihat_dev.urls)
+                new_len = len(cihat_dev.urls.urlpatterns)
+
+                self.assertGreater(new_len, initial_len)
+
+                url_patterns_str = [str(p) for p in cihat_dev.urls.urlpatterns]
+                media_found = any("media" in p for p in url_patterns_str)
+                static_found = any("static" in p for p in url_patterns_str)
+
+                self.assertTrue(media_found, "Media URL pattern not found")
+                self.assertTrue(static_found, "Static URL pattern not found")
+        finally:
+            # Restore the original state so we don't break other tests
+            with override_settings(DEBUG=False):
+                importlib.reload(cihat_dev.urls)
