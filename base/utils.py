@@ -42,7 +42,7 @@ def photo_resizer(image: Image, size: int) -> BytesIO:
         image = image.convert("RGB")
     image.thumbnail((size, size))
     image = ImageOps.exif_transpose(image)
-    image.save(output, format="JPEG", quality=100)
+    image.save(output, format="JPEG", quality=85)
     output.seek(0)
     return output
 
@@ -160,9 +160,14 @@ def captcha_is_valid(request) -> bool:
 
 
 def _generate_captcha(request):
+    nums_key = f"{CAPTCHA_SESSION_KEY}_nums"
+    nums = request.session.get(nums_key)
+    if nums:
+        return nums
     num_one = secrets.randbelow(10) + 1
     num_two = secrets.randbelow(10) + 1
     request.session[CAPTCHA_SESSION_KEY] = num_one + num_two
+    request.session[nums_key] = (num_one, num_two)
     return num_one, num_two
 
 
@@ -182,9 +187,7 @@ class BoundedExecutor:
     def submit(self, fn, *args, **kwargs):
         if not self.semaphore.acquire(blocking=False):
             logger.warning("BoundedExecutor queue full. Dropping task to prevent DoS.")
-            f = concurrent.futures.Future()
-            f.set_exception(RuntimeError("Task queue is full"))
-            return f
+            raise RuntimeError("Task queue is full")
 
         def release_and_run():
             try:

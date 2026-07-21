@@ -79,16 +79,16 @@ def _send_contact_email(request, form_data, user_email, ip_address):
         reply_to=[email],
     )
 
-    future = email_executor.submit(email_message.send, fail_silently=False)
-    if future.done() and future.exception():
-        messages.error(
-            request,
-            "Our system is currently busy. Please try again later.",
-        )
-    else:
+    try:
+        email_executor.submit(email_message.send, fail_silently=False)
         messages.success(
             request,
             "Your message was sent successfully.\nWe will touch you back soon.",
+        )
+    except RuntimeError:
+        messages.error(
+            request,
+            "Our system is currently busy. Please try again later.",
         )
 
     return redirect("base:home")

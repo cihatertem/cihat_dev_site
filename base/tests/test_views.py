@@ -102,13 +102,12 @@ class HomePageViewTests(TestCase):
             "website": "",
         }
 
-        import concurrent.futures
         from unittest.mock import patch
 
-        future = concurrent.futures.Future()
-        future.set_exception(RuntimeError("Task queue is full"))
-
-        with patch("base.views.email_executor.submit", return_value=future):
+        with patch(
+            "base.views.email_executor.submit",
+            side_effect=RuntimeError("Task queue is full"),
+        ):
             response = self.client.post(self.url, data)
 
         self.assertRedirects(response, self.url)

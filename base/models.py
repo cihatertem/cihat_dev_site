@@ -55,7 +55,7 @@ class Work(models.Model):
     created = models.DateTimeField(auto_now_add=True)
 
     def __str__(self):
-        return self.customer
+        return self.customer or "Unknown Customer"
 
     def save(self, *args, **kwargs):
         should_resize = False
@@ -69,6 +69,11 @@ class Work(models.Model):
         super().save(*args, **kwargs)
 
         if should_resize:
-            transaction.on_commit(
-                lambda: image_executor.submit(resize_work_snapshot_task, self.id)
-            )
+
+            def submit_resize():
+                try:
+                    image_executor.submit(resize_work_snapshot_task, self.id)
+                except RuntimeError:
+                    pass
+
+            transaction.on_commit(submit_resize)

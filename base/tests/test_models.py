@@ -39,6 +39,12 @@ class WorkModelTest(TestCase):
         work = Work(customer="Test Customer")
         self.assertEqual(str(work), "Test Customer")
 
+        work_none = Work(customer=None)
+        self.assertEqual(str(work_none), "Unknown Customer")
+
+        work_blank = Work(customer="")
+        self.assertEqual(str(work_blank), "Unknown Customer")
+
     def test_save_resizes_large_image(self):
         large_image = self.generate_test_image(500, 300)
         work = Work(user=self.user, customer="Test Customer", snapshot=large_image)

@@ -414,6 +414,23 @@ class GenerateCaptchaTest(TestCase):
         self.assertIn(CAPTCHA_SESSION_KEY, request.session)
         self.assertEqual(request.session[CAPTCHA_SESSION_KEY], 13)
 
+    def test_generate_captcha_cached(self):
+        request = self.factory.get("/")
+        request.session = {}
+
+        # First call generates numbers and sets session
+        num_one, num_two = _generate_captcha(request)
+
+        # Second call should return cached numbers
+        num_one_cached, num_two_cached = _generate_captcha(request)
+
+        self.assertEqual(num_one, num_one_cached)
+        self.assertEqual(num_two, num_two_cached)
+        self.assertEqual(request.session[CAPTCHA_SESSION_KEY], num_one + num_two)
+        self.assertEqual(
+            request.session[f"{CAPTCHA_SESSION_KEY}_nums"], (num_one, num_two)
+        )
+
 
 class PhotoResizerTest(SimpleTestCase):
     def test_photo_resizer_rgba_conversion(self):
@@ -561,44 +578,15 @@ class BoundedExecutorTest(SimpleTestCase):
 
         # Third task should fail immediately as the queue is full
         with self.assertLogs("base.utils", level="WARNING") as logs:
-            f3 = executor.submit(blocking_task)
+            with self.assertRaisesMessage(RuntimeError, "Task queue is full"):
+                executor.submit(blocking_task)
 
-        self.assertIn("Task queue is full", str(f3.exception()))
         self.assertEqual(
             logs.output,
             [
                 "WARNING:base.utils:BoundedExecutor queue full. Dropping task to prevent DoS."
             ],
         )
-
-        # Verify that the third task returns a Future with RuntimeError
-        with self.assertRaisesMessage(RuntimeError, "Task queue is full"):
-            f3.result()
-
-        # Cleanup
-        event.set()
-        executor.shutdown()
-
-    def test_bounded_executor_queue_full_sync_check(self):
-        executor = BoundedExecutor(max_workers=1, max_queue=1)
-        event = threading.Event()
-
-        def blocking_task():
-            event.wait()
-            return True
-
-        # First task takes the worker
-        executor.submit(blocking_task)
-        # Second task fills the queue
-        executor.submit(blocking_task)
-
-        # Third task should fail immediately
-        f3 = executor.submit(blocking_task)
-
-        # Verify that we can synchronously check for the exception using done() and exception()
-        self.assertTrue(f3.done())
-        self.assertIsInstance(f3.exception(), RuntimeError)
-        self.assertEqual(str(f3.exception()), "Task queue is full")
 
         # Cleanup
         event.set()
