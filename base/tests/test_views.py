@@ -253,7 +253,9 @@ class HomePageViewTests(TestCase):
 
             # 1. Cache Miss
             skills, works = _get_cached_home_data(self.test_email)
-            mock_get_404.assert_called_once_with(User, email=self.test_email)
+            self.assertEqual(mock_get_404.call_count, 1)
+            # The first argument is the QuerySet created by User.objects.prefetch_related, so we check kwargs instead.
+            self.assertEqual(mock_get_404.call_args.kwargs, {"email": self.test_email})
             self.assertEqual(len(skills), 1)
             self.assertEqual(skills[0].skill, "Python")
             self.assertEqual(len(works), 1)

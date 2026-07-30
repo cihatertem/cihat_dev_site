@@ -96,7 +96,9 @@ def _send_contact_email(request, form_data, user_email, ip_address):
 
 def _get_cached_home_data(user_email):
     def get_home_data():
-        user = get_object_or_404(User, email=user_email)
+        user = get_object_or_404(
+            User.objects.prefetch_related("skill_set", "work_set"), email=user_email
+        )
         skills = tuple(user.skill_set.all())
         works = tuple(user.work_set.all())
         return skills, works
