@@ -16,6 +16,42 @@ class TestContactForm(SimpleTestCase):
         )
         self.assertTrue(form.is_valid())
 
+    def test_contact_form_newline_in_name_invalid(self):
+        form = ContactForm(
+            data={
+                "name": "John\nDoe",
+                "subject": "Test Subject",
+                "email": "johndoe@example.com",
+                "body": "This is a test message.",
+            }
+        )
+        self.assertFalse(form.is_valid())
+        self.assertIn("name", form.errors)
+
+    def test_contact_form_newline_in_subject_invalid(self):
+        form = ContactForm(
+            data={
+                "name": "John Doe",
+                "subject": "Test\nSubject",
+                "email": "johndoe@example.com",
+                "body": "This is a test message.",
+            }
+        )
+        self.assertFalse(form.is_valid())
+        self.assertIn("subject", form.errors)
+
+    def test_contact_form_cr_in_subject_invalid(self):
+        form = ContactForm(
+            data={
+                "name": "John Doe",
+                "subject": "Test\rSubject",
+                "email": "johndoe@example.com",
+                "body": "This is a test message.",
+            }
+        )
+        self.assertFalse(form.is_valid())
+        self.assertIn("subject", form.errors)
+
     def test_contact_form_no_data(self):
         form = ContactForm(data={})
         self.assertFalse(form.is_valid())

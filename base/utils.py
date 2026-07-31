@@ -205,31 +205,36 @@ image_executor = BoundedExecutor(max_workers=2, max_queue=10)
 
 
 def resize_work_snapshot_task(work_id):
+    from base.models import Work
+
     try:
-        from base.models import Work
-
         work = Work.objects.get(id=work_id)
-        if not work.snapshot:
-            return
+    except ObjectDoesNotExist as e:
+        logger.error(f"Error resizing work snapshot {work_id}: {e}")
+        return
 
-        try:
-            work.snapshot.file
-        except FileNotFoundError:
-            return
+    if not work.snapshot:
+        return
 
+    try:
+        work.snapshot.file
+    except FileNotFoundError:
+        return
+
+    try:
         with Image.open(work.snapshot) as image:
             if image.height <= 250 and image.width <= 250:
                 return
 
             output = photo_resizer(image, 250)
 
-            old_name = work.snapshot.name
-            new_file_name = f"{work.snapshot.name.split('/')[-1].split('.')[0]}.jpg"
+        old_name = work.snapshot.name
+        new_file_name = f"{work.snapshot.name.split('/')[-1].split('.')[0]}.jpg"
 
-            work.snapshot.save(new_file_name, ContentFile(output.read()), save=False)
-            work.save(update_fields=["snapshot"])
+        work.snapshot.save(new_file_name, ContentFile(output.read()), save=False)
+        work.save(update_fields=["snapshot"])
 
-            if work.snapshot.name != old_name:
-                work.snapshot.storage.delete(old_name)
-    except (ObjectDoesNotExist, OSError) as e:
+        if work.snapshot.name != old_name:
+            work.snapshot.storage.delete(old_name)
+    except OSError as e:
         logger.error(f"Error resizing work snapshot {work_id}: {e}")
